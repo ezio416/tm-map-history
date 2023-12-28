@@ -156,7 +156,7 @@ class Map {
         return newPath;
     }
 
-    // courtesy of BetterTOTD plugin - https://github.com/XertroV/tm-better-totd
+    // courtesy of "BetterTOTD" plugin - https://github.com/XertroV/tm-better-totd
     void GetMapInfoCoro() {
         if (gettingMapInfo)
             return;

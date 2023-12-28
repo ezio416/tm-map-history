@@ -1,8 +1,8 @@
 # Map History
 
-For the last maps you've played (default 20, configurable), you can easily access them in a menu and do the following:
+For the last maps you've played (default 25, configurable), you can easily access them in a menu and do the following:
 
-- play map (paid access required!)
+- play (**paid access required**)
 - open in editor
 - download
 - open its Trackmania.io page

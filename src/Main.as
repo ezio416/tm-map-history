@@ -14,7 +14,7 @@ void RenderMenu() {
         for (int i = maps.Length - 1; i >= 0; i--) {
             Map@ map = maps[i];
 
-            if (UI::BeginMenu(S_MapNameColor ? map.nameColored : map.nameStripped)) {
+            if (UI::BeginMenu((S_MapNameColor ? map.nameColored : map.nameStripped) + "##" + map.uid)) {
                 if (UI::MenuItem(Icons::Play + " Play"))
                     startnew(CoroutineFunc(map.PlayCoro));
 
@@ -86,6 +86,11 @@ void AddMap(CGameCtnChallenge@ challenge) {
     } else {
         trace("adding " + map.nameQuoted);
         maps.InsertLast(map);
+    }
+
+    if (maps.Length > historyMax) {
+        trace("over limit, removing earliest map");
+        maps.RemoveAt(0);
     }
 
     SaveHistoryFile();
