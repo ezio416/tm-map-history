@@ -121,3 +121,16 @@ void SaveHistoryFile() {
 
     Json::ToFile(historyFile, jsonMaps);
 }
+
+// courtesy of "BetterTOTD" plugin - https://github.com/XertroV/tm-better-totd
+void ReturnToMenu() {
+    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+
+    if (App.Network.PlaygroundClientScriptAPI.IsInGameMenuDisplayed)
+        App.Network.PlaygroundInterfaceScriptHandler.CloseInGameMenu(CGameScriptHandlerPlaygroundInterface::EInGameMenuResult::Quit);
+
+    App.BackToMainMenu();
+
+    while (!App.ManiaTitleControlScriptAPI.IsReady)
+        yield();
+}
