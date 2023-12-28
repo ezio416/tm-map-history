@@ -117,7 +117,8 @@ class Map {
             return;
 
         loadingMap = true;
-        trace("loading map for editing");
+
+        trace("loading map " + nameQuoted + " for editing");
 
         CTrackMania@ App = cast<CTrackMania@>(GetApp());
         App.BackToMainMenu();
@@ -163,6 +164,8 @@ class Map {
 
         gettingMapInfo = true;
 
+        trace("getting map info for " + nameQuoted);
+
         if (uid.Length != 26 && uid.Length != 27) {
             warn("bad uid: " + uid);
             return;
@@ -206,6 +209,7 @@ class Map {
     }
 
     void OpenTmio() {
+        trace("opening Trackmania.io page for " + nameQuoted);
         OpenBrowserURL("https://trackmania.io/#/leaderboard/" + uid);
     }
 
@@ -228,6 +232,8 @@ class Map {
             return;
 
         loadingMap = true;
+
+        trace("loading map " + nameQuoted + " for playing");
 
         if (!Permissions::PlayLocalMap()) {
             warn("paid access required - can't load map " + nameQuoted);
