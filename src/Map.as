@@ -120,15 +120,9 @@ class Map {
 
         trace("loading map " + nameQuoted + " for editing");
 
+        ReturnToMenu();
+
         CTrackMania@ App = cast<CTrackMania@>(GetApp());
-        App.BackToMainMenu();
-
-        while (!App.ManiaTitleControlScriptAPI.IsReady)
-            yield();
-        while (App.Switcher.ModuleStack.Length == 0 || cast<CTrackManiaMenus>(App.Switcher.ModuleStack[0]) is null)
-            yield();
-        yield();
-
         App.ManiaTitleControlScriptAPI.EditMap(downloadUrl, "", "");
 
         const uint64 waitToEditAgain = 5000;
@@ -241,15 +235,9 @@ class Map {
             return;
         }
 
+        ReturnToMenu();
+
         CTrackMania@ App = cast<CTrackMania@>(GetApp());
-        App.BackToMainMenu();
-
-        while (!App.ManiaTitleControlScriptAPI.IsReady)
-            yield();
-        while (App.Switcher.ModuleStack.Length == 0 || cast<CTrackManiaMenus>(App.Switcher.ModuleStack[0]) is null)
-            yield();
-        yield();
-
         App.ManiaTitleControlScriptAPI.PlayMap(downloadUrl, "TrackMania/TM_PlayMap_Local", "");
 
         const uint64 waitToPlayAgain = 5000;
