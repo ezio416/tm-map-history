@@ -1,5 +1,5 @@
 // c 2023-12-27
-// m 2023-12-28
+// m 2023-12-30
 
 string downloadedFolder = IO::FromUserGameFolder("Maps/Downloaded").Replace("\\", "/");
 string historyFile = IO::FromStorageFolder("history.json");
@@ -41,7 +41,9 @@ void Main() {
     LoadHistoryFile();
 
     while (true) {
-        AddMap(App.RootMap);
+        if (App.Editor is null)
+            AddMap(App.RootMap);
+
         yield();
     }
 }
