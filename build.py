@@ -1,8 +1,8 @@
 # c 2023-12-28
-# m 2023-12-29
+# m 2023-12-31
 
 import os
-from zipfile import ZipFile, ZIP_LZMA
+from zipfile import ZipFile, ZIP_DEFLATED
 
 def main():
     dir: str = os.getcwd()
@@ -32,7 +32,7 @@ def main():
 
     new_zipname: str = dir + '/versions/unsigned/' + zipname
 
-    z: ZipFile = ZipFile(zipname, 'w', ZIP_LZMA)
+    z: ZipFile = ZipFile(zipname, 'w', ZIP_DEFLATED)
 
     z.write(info, os.path.basename(info))
     z.write(license, os.path.basename(license))
