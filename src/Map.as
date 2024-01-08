@@ -1,5 +1,5 @@
 // c 2023-12-27
-// m 2023-12-28
+// m 2024-01-08
 
 bool downloadingMap = false;
 bool gettingMapInfo = false;
@@ -230,7 +230,7 @@ class Map {
         trace("loading map " + nameQuoted + " for playing");
 
         if (!Permissions::PlayLocalMap()) {
-            warn("paid access required - can't load map " + nameQuoted);
+            warn("Club access required - can't load map " + nameQuoted);
             loadingMap = false;
             return;
         }
