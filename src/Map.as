@@ -251,10 +251,10 @@ class Map {
     Json::Value@ ToJson() {
         Json::Value@ map = Json::Object();
 
-        map["cachePath"] = cachePath;
+        map["cachePath"]   = cachePath;
         map["downloadUrl"] = downloadUrl;
-        map["nameRaw"] = nameRaw;
-        map["uid"] = uid;
+        map["nameRaw"]     = nameRaw;
+        map["uid"]         = uid;
 
         return map;
     }

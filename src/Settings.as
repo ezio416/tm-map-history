@@ -1,8 +1,11 @@
 // c 2023-12-28
-// m 2023-12-28
+// m 2024-05-24
+
+[Setting category="General" name="Simple mode" description="Left-click to play, right-click to edit"]
+bool S_Simple = false;
 
 [Setting category="General" name="Maximum history length" min=1 max=50]
-uint historyMax = 25;
+uint S_HistoryMax = 25;
 
 [Setting category="General" name="Show option to open Downloaded folder"]
 bool S_DownloadedFolder = false;

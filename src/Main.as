@@ -1,10 +1,10 @@
 // c 2023-12-27
-// m 2023-12-30
+// m 2024-05-24
 
-string downloadedFolder = IO::FromUserGameFolder("Maps/Downloaded").Replace("\\", "/");
-string historyFile = IO::FromStorageFolder("history.json");
-Map@[] maps;
-string title = "\\$" + Icons::ClockO + " Map History";
+const string downloadedFolder = IO::FromUserGameFolder("Maps/Downloaded").Replace("\\", "/");
+const string historyFile      = IO::FromStorageFolder("history.json");
+Map@[]       maps;
+const string title            = Icons::ClockO + " Map History";
 
 void RenderMenu() {
     if (UI::BeginMenu(title, S_DownloadedFolder || maps.Length > 0)) {
@@ -14,20 +14,28 @@ void RenderMenu() {
         for (int i = maps.Length - 1; i >= 0; i--) {
             Map@ map = maps[i];
 
-            if (UI::BeginMenu((S_MapNameColor ? map.nameColored : map.nameStripped) + "##" + map.uid)) {
-                if (UI::MenuItem(Icons::Play + " Play"))
+            if (S_Simple) {
+                if (UI::MenuItem((S_MapNameColor ? map.nameColored : map.nameStripped) + "##" + map.uid))
                     startnew(CoroutineFunc(map.PlayCoro));
 
-                if (UI::MenuItem(Icons::Pencil + " Edit"))
+                if (UI::IsItemHovered() && UI::IsMouseReleased(UI::MouseButton::Right))
                     startnew(CoroutineFunc(map.EditCoro));
+            } else {
+                if (UI::BeginMenu((S_MapNameColor ? map.nameColored : map.nameStripped) + "##" + map.uid)) {
+                    if (UI::MenuItem(Icons::Play + " Play"))
+                        startnew(CoroutineFunc(map.PlayCoro));
 
-                if (UI::MenuItem(Icons::Download + " Download"))
-                    startnew(CoroutineFunc(map.CopyFromCache));
+                    if (UI::MenuItem(Icons::Pencil + " Edit"))
+                        startnew(CoroutineFunc(map.EditCoro));
 
-                if (UI::MenuItem(Icons::Heartbeat + " Trackmania.io"))
-                    map.OpenTmio();
+                    if (UI::MenuItem(Icons::Download + " Download"))
+                        startnew(CoroutineFunc(map.CopyFromCache));
 
-                UI::EndMenu();
+                    if (UI::MenuItem(Icons::Heartbeat + " Trackmania.io"))
+                        map.OpenTmio();
+
+                    UI::EndMenu();
+                }
             }
         }
 
@@ -79,19 +87,19 @@ void AddMap(CGameCtnChallenge@ challenge) {
     if (foundIndex > -1) {
         for (uint i = foundIndex + 1; i < maps.Length; i++) {
             Map@ movingMap = maps[i];
-            trace("moving " + movingMap.nameQuoted + " from index " + i + " to " + tostring(i - 1));
+            // trace("moving " + movingMap.nameQuoted + " from index " + i + " to " + tostring(i - 1));
             maps[i - 1] = movingMap;
         }
 
-        trace("moving " + map.nameQuoted + " to end");
+        // trace("moving " + map.nameQuoted + " to end");
         maps[maps.Length - 1] = map;
     } else {
-        trace("adding " + map.nameQuoted);
+        // trace("adding " + map.nameQuoted);
         maps.InsertLast(map);
     }
 
-    if (maps.Length > historyMax) {
-        trace("over limit, removing earliest map");
+    if (maps.Length > S_HistoryMax) {
+        // trace("over limit, removing earliest map");
         maps.RemoveAt(0);
     }
 
