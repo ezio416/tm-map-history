@@ -1,8 +1,9 @@
 # c 2023-12-28
-# m 2023-12-31
+# m 2024-01-22
 
 import os
 from zipfile import ZipFile, ZIP_DEFLATED
+
 
 def main():
     dir: str = os.getcwd()
@@ -32,23 +33,21 @@ def main():
 
     new_zipname: str = dir + '/versions/unsigned/' + zipname
 
-    z: ZipFile = ZipFile(zipname, 'w', ZIP_DEFLATED)
+    with ZipFile(zipname, 'w', ZIP_DEFLATED) as z:
+        z.write(info, os.path.basename(info))
+        z.write(license, os.path.basename(license))
 
-    z.write(info, os.path.basename(info))
-    z.write(license, os.path.basename(license))
-
-    for dir, subdirs, files in os.walk(src):
-        for file in files:
-            abspath: str = os.path.join(dir, file)
-            z.write(abspath, os.path.relpath(abspath, os.path.join(src, '..')))
-
-    z.close()
+        for dir, subdirs, files in os.walk(src):
+            for file in files:
+                abspath: str = os.path.join(dir, file)
+                z.write(abspath, os.path.relpath(abspath, os.path.join(src, '..')))
 
     if os.path.isfile(new_zipname):
         print(zipname + ' already exists in unsigned folder!')
         return
 
     os.rename(zipname, new_zipname)
+
 
 if __name__ == '__main__':
     main()
