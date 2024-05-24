@@ -1,9 +1,9 @@
 // c 2023-12-27
-// m 2024-01-08
+// m 2024-05-24
 
 bool downloadingMap = false;
 bool gettingMapInfo = false;
-bool loadingMap = false;
+bool loadingMap     = false;
 
 class Map {
     string cachePath;
@@ -20,8 +20,8 @@ class Map {
         cachePath = map["cachePath"];
         downloadUrl = map["downloadUrl"];
         nameRaw = map["nameRaw"];
-        nameColored = ColoredString(nameRaw);
-        nameStripped = StripFormatCodes(nameRaw);
+        nameColored = Text::OpenplanetFormatCodes(nameRaw);
+        nameStripped = Text::StripFormatCodes(nameRaw);
         nameQuoted = "\"" + nameStripped + "\"";
         uid = map["uid"];
     }
@@ -32,8 +32,8 @@ class Map {
             cachePath = string(File.FullFileName).Replace("\\", "/");
 
         nameRaw = challenge.MapName;
-        nameColored = ColoredString(nameRaw);
-        nameStripped = StripFormatCodes(nameRaw);
+        nameColored = Text::OpenplanetFormatCodes(nameRaw);
+        nameStripped = Text::StripFormatCodes(nameRaw);
         nameQuoted = "\"" + nameStripped + "\"";
         uid = challenge.EdChallengeId;
     }
