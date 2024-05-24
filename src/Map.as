@@ -17,13 +17,13 @@ class Map {
     Map() { }
 
     Map(Json::Value@ map) {
-        cachePath = map["cachePath"];
-        downloadUrl = map["downloadUrl"];
-        nameRaw = map["nameRaw"];
-        nameColored = Text::OpenplanetFormatCodes(nameRaw);
+        cachePath    = map["cachePath"];
+        downloadUrl  = map["downloadUrl"];
+        nameRaw      = map["nameRaw"];
+        nameColored  = Text::OpenplanetFormatCodes(nameRaw);
         nameStripped = Text::StripFormatCodes(nameRaw);
-        nameQuoted = "\"" + nameStripped + "\"";
-        uid = map["uid"];
+        nameQuoted   = "\"" + nameStripped + "\"";
+        uid          = map["uid"];
     }
 
     Map(CGameCtnChallenge@ challenge) {
@@ -31,11 +31,11 @@ class Map {
         if (File !is null)
             cachePath = string(File.FullFileName).Replace("\\", "/");
 
-        nameRaw = challenge.MapName;
-        nameColored = Text::OpenplanetFormatCodes(nameRaw);
+        nameRaw      = challenge.MapName;
+        nameColored  = Text::OpenplanetFormatCodes(nameRaw);
         nameStripped = Text::StripFormatCodes(nameRaw);
-        nameQuoted = "\"" + nameStripped + "\"";
-        uid = challenge.EdChallengeId;
+        nameQuoted   = "\"" + nameStripped + "\"";
+        uid          = challenge.EdChallengeId;
     }
 
     // courtesy of "Download Map" plugin - https://github.com/ezio416/tm-download-map
@@ -100,6 +100,11 @@ class Map {
 
     // courtesy of "Play Map" plugin - https://github.com/XertroV/tm-play-map
     void EditCoro() {
+        if (!hasEditPermission) {
+            warn("user doesn't have permission to use the advanced editor");
+            return;
+        }
+
         if (downloadUrl == "") {
             Meta::PluginCoroutine@ urlCoro = startnew(CoroutineFunc(GetMapInfoCoro));
             while (urlCoro.IsRunning())
@@ -209,6 +214,11 @@ class Map {
 
     // courtesy of "Play Map" plugin - https://github.com/XertroV/tm-play-map
     void PlayCoro() {
+        if (!hasPlayPermission) {
+            warn("user doesn't have permission to play local maps");
+            return;
+        }
+
         if (downloadUrl == "") {
             Meta::PluginCoroutine@ urlCoro = startnew(CoroutineFunc(GetMapInfoCoro));
             while (urlCoro.IsRunning())

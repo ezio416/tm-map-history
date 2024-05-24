@@ -1,10 +1,31 @@
 // c 2023-12-27
 // m 2024-05-24
 
-const string downloadedFolder = IO::FromUserGameFolder("Maps/Downloaded").Replace("\\", "/");
-const string historyFile      = IO::FromStorageFolder("history.json");
+const string downloadedFolder  = IO::FromUserGameFolder("Maps/Downloaded").Replace("\\", "/");
+bool         hasEditPermission = false;
+bool         hasPlayPermission = false;
+const string historyFile       = IO::FromStorageFolder("history.json");
 Map@[]       maps;
-const string title            = Icons::ClockO + " Map History";
+const string title             = Icons::ClockO + " Map History";
+
+void Main() {
+    hasEditPermission = Permissions::OpenAdvancedMapEditor();
+    hasPlayPermission = Permissions::PlayLocalMap();
+
+    if (!hasPlayPermission && S_NotifyStarter)
+        UI::ShowNotification(title, "Paid access is required to play maps, but you can still see your history and edit maps.", vec4(1.0f, 0.1f, 0.1f, 0.8f));
+
+    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+
+    LoadHistoryFile();
+
+    while (true) {
+        yield();
+
+        if (App.Editor is null)
+            AddMap(App.RootMap);
+    }
+}
 
 void RenderMenu() {
     if (UI::BeginMenu(title, S_DownloadedFolder || maps.Length > 0)) {
@@ -22,11 +43,17 @@ void RenderMenu() {
                     startnew(CoroutineFunc(map.EditCoro));
             } else {
                 if (UI::BeginMenu((S_MapNameColor ? map.nameColored : map.nameStripped) + "##" + map.uid)) {
-                    if (UI::MenuItem(Icons::Play + " Play"))
-                        startnew(CoroutineFunc(map.PlayCoro));
+                    if (UI::MenuItem(Icons::Play + " Play")) {
+                        UI::BeginDisabled(!hasPlayPermission);
+                            startnew(CoroutineFunc(map.PlayCoro));
+                        UI::EndDisabled();
+                    }
 
-                    if (UI::MenuItem(Icons::Pencil + " Edit"))
-                        startnew(CoroutineFunc(map.EditCoro));
+                    if (UI::MenuItem(Icons::Pencil + " Edit")) {
+                        UI::BeginDisabled(!hasEditPermission);
+                            startnew(CoroutineFunc(map.EditCoro));
+                        UI::EndDisabled();
+                    }
 
                     if (UI::MenuItem(Icons::Download + " Download"))
                         startnew(CoroutineFunc(map.CopyFromCache));
@@ -40,19 +67,6 @@ void RenderMenu() {
         }
 
         UI::EndMenu();
-    }
-}
-
-void Main() {
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
-
-    LoadHistoryFile();
-
-    while (true) {
-        if (App.Editor is null)
-            AddMap(App.RootMap);
-
-        yield();
     }
 }
 
@@ -121,17 +135,6 @@ void LoadHistoryFile() {
     }
 }
 
-void SaveHistoryFile() {
-    trace("saving history.json");
-
-    Json::Value@ jsonMaps = Json::Object();
-
-    for (uint i = 0; i < maps.Length; i++)
-        jsonMaps[tostring(i)] = maps[i].ToJson();
-
-    Json::ToFile(historyFile, jsonMaps);
-}
-
 // courtesy of "BetterTOTD" plugin - https://github.com/XertroV/tm-better-totd
 void ReturnToMenu() {
     CTrackMania@ App = cast<CTrackMania@>(GetApp());
@@ -143,4 +146,15 @@ void ReturnToMenu() {
 
     while (!App.ManiaTitleControlScriptAPI.IsReady)
         yield();
+}
+
+void SaveHistoryFile() {
+    trace("saving history.json");
+
+    Json::Value@ jsonMaps = Json::Object();
+
+    for (uint i = 0; i < maps.Length; i++)
+        jsonMaps[tostring(i)] = maps[i].ToJson();
+
+    Json::ToFile(historyFile, jsonMaps);
 }

@@ -12,3 +12,6 @@ bool S_DownloadedFolder = false;
 
 [Setting category="General" name="Show map names with color"]
 bool S_MapNameColor = true;
+
+[Setting category="General" name="Notify when Starter Access is detected"]
+bool S_NotifyStarter = true;
