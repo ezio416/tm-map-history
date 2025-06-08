@@ -1,5 +1,5 @@
 // c 2023-12-27
-// m 2024-05-24
+// m 2025-06-08
 
 bool downloadingMap = false;
 bool gettingMapInfo = false;
@@ -70,7 +70,7 @@ class Map {
         downloadingMap = true;
 
         if (downloadUrl == "") {
-            Meta::PluginCoroutine@ urlCoro = startnew(CoroutineFunc(GetMapInfoCoro));
+            awaitable@ urlCoro = startnew(CoroutineFunc(GetMapInfoCoro));
             while (urlCoro.IsRunning())
                 yield();
 
@@ -106,7 +106,7 @@ class Map {
         }
 
         if (downloadUrl == "") {
-            Meta::PluginCoroutine@ urlCoro = startnew(CoroutineFunc(GetMapInfoCoro));
+            awaitable@ urlCoro = startnew(CoroutineFunc(GetMapInfoCoro));
             while (urlCoro.IsRunning())
                 yield();
 
@@ -220,7 +220,7 @@ class Map {
         }
 
         if (downloadUrl == "") {
-            Meta::PluginCoroutine@ urlCoro = startnew(CoroutineFunc(GetMapInfoCoro));
+            awaitable@ urlCoro = startnew(CoroutineFunc(GetMapInfoCoro));
             while (urlCoro.IsRunning())
                 yield();
 
