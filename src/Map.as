@@ -213,12 +213,6 @@ class Map {
 
         trace("loading map " + nameQuoted + " for playing");
 
-        if (!Permissions::PlayLocalMap()) {
-            warn("Club access required - can't load map " + nameQuoted);
-            loadingMap = false;
-            return;
-        }
-
         ReturnToMenu();
 
         auto App = cast<CTrackMania>(GetApp());
