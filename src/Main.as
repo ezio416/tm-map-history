@@ -1,6 +1,3 @@
-// c 2023-12-27
-// m 2024-05-24
-
 const string downloadedFolder  = IO::FromUserGameFolder("Maps/Downloaded").Replace("\\", "/");
 bool         hasEditPermission = false;
 bool         hasPlayPermission = false;
@@ -12,54 +9,80 @@ void Main() {
     hasEditPermission = Permissions::OpenAdvancedMapEditor();
     hasPlayPermission = Permissions::PlayLocalMap();
 
-    if (!hasPlayPermission && S_NotifyStarter)
-        UI::ShowNotification(title, "Paid access is required to play maps, but you can still see your history and edit maps.", vec4(1.0f, 0.1f, 0.1f, 0.8f));
+    if (true
+        and !hasPlayPermission
+        and S_NotifyStarter
+    ) {
+        UI::ShowNotification(
+            title,
+            "Paid access is required to play maps, but you can still see your history and edit maps.",
+            vec4(1.0f, 0.1f, 0.1f, 0.8f)
+        );
+    }
 
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    auto App = cast<CTrackMania>(GetApp());
 
     LoadHistoryFile();
 
     while (true) {
         yield();
 
-        if (App.Editor is null)
+        if (App.Editor is null) {
             AddMap(App.RootMap);
+        }
     }
 }
 
 void RenderMenu() {
-    if (UI::BeginMenu(title, S_DownloadedFolder || maps.Length > 0)) {
-        if (S_DownloadedFolder && UI::MenuItem(Icons::ExternalLink + " Open \"Downloaded\" Folder"))
+    if (UI::BeginMenu(
+        title,
+        (false
+            or S_DownloadedFolder
+            or maps.Length > 0
+        )
+    )) {
+        if (true
+            and S_DownloadedFolder
+            and UI::MenuItem(Icons::ExternalLink + " Open \"Downloaded\" Folder")
+        ) {
             OpenExplorerPath(downloadedFolder);
+        }
 
         for (int i = maps.Length - 1; i >= 0; i--) {
             Map@ map = maps[i];
 
             if (S_Simple) {
-                if (UI::MenuItem((S_MapNameColor ? map.nameColored : map.nameStripped) + "##" + map.uid))
-                    startnew(CoroutineFunc(map.PlayCoro));
+                if (UI::MenuItem((S_MapNameColor ? map.nameColored : map.nameStripped) + "##" + map.uid)) {
+                    startnew(CoroutineFunc(map.PlayAsync));
+                }
 
-                if (UI::IsItemHovered() && UI::IsMouseReleased(UI::MouseButton::Right))
-                    startnew(CoroutineFunc(map.EditCoro));
+                if (true
+                    and UI::IsItemHovered()
+                    and UI::IsMouseReleased(UI::MouseButton::Right)
+                ) {
+                    startnew(CoroutineFunc(map.EditAsync));
+                }
             } else {
                 if (UI::BeginMenu((S_MapNameColor ? map.nameColored : map.nameStripped) + "##" + map.uid)) {
                     if (UI::MenuItem(Icons::Play + " Play")) {
                         UI::BeginDisabled(!hasPlayPermission);
-                            startnew(CoroutineFunc(map.PlayCoro));
+                        startnew(CoroutineFunc(map.PlayAsync));
                         UI::EndDisabled();
                     }
 
                     if (UI::MenuItem(Icons::Pencil + " Edit")) {
                         UI::BeginDisabled(!hasEditPermission);
-                            startnew(CoroutineFunc(map.EditCoro));
+                        startnew(CoroutineFunc(map.EditAsync));
                         UI::EndDisabled();
                     }
 
-                    if (UI::MenuItem(Icons::Download + " Download"))
+                    if (UI::MenuItem(Icons::Download + " Download")) {
                         startnew(CoroutineFunc(map.CopyFromCache));
+                    }
 
-                    if (UI::MenuItem(Icons::Heartbeat + " Trackmania.io"))
+                    if (UI::MenuItem(Icons::Heartbeat + " Trackmania.io")) {
                         map.OpenTmio();
+                    }
 
                     UI::EndMenu();
                 }
@@ -71,8 +94,9 @@ void RenderMenu() {
 }
 
 void AddMap(CGameCtnChallenge@ challenge) {
-    if (challenge is null)
+    if (challenge is null) {
         return;
+    }
 
     Map@ map;
 
@@ -85,8 +109,9 @@ void AddMap(CGameCtnChallenge@ challenge) {
         return;
     }
 
-    if (maps[maps.Length - 1].uid == challenge.EdChallengeId)
+    if (maps[maps.Length - 1].uid == challenge.EdChallengeId) {
         return;
+    }
 
     @map = Map(challenge);
     int foundIndex = -1;
@@ -137,15 +162,19 @@ void LoadHistoryFile() {
 
 // courtesy of "BetterTOTD" plugin - https://github.com/XertroV/tm-better-totd
 void ReturnToMenu() {
-    CTrackMania@ App = cast<CTrackMania@>(GetApp());
+    auto App = cast<CTrackMania>(GetApp());
 
-    if (App.Network.PlaygroundClientScriptAPI.IsInGameMenuDisplayed)
-        App.Network.PlaygroundInterfaceScriptHandler.CloseInGameMenu(CGameScriptHandlerPlaygroundInterface::EInGameMenuResult::Quit);
+    if (App.Network.PlaygroundClientScriptAPI.IsInGameMenuDisplayed) {
+        App.Network.PlaygroundInterfaceScriptHandler.CloseInGameMenu(
+            CGameScriptHandlerPlaygroundInterface::EInGameMenuResult::Quit
+        );
+    }
 
     App.BackToMainMenu();
 
-    while (!App.ManiaTitleControlScriptAPI.IsReady)
+    while (!App.ManiaTitleControlScriptAPI.IsReady) {
         yield();
+    }
 }
 
 void SaveHistoryFile() {
@@ -153,8 +182,9 @@ void SaveHistoryFile() {
 
     Json::Value@ jsonMaps = Json::Object();
 
-    for (uint i = 0; i < maps.Length; i++)
+    for (uint i = 0; i < maps.Length; i++) {
         jsonMaps[tostring(i)] = maps[i].ToJson();
+    }
 
     Json::ToFile(historyFile, jsonMaps);
 }
