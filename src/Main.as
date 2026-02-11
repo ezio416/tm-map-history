@@ -186,5 +186,5 @@ void SaveHistoryFile() {
         jsonMaps[tostring(i)] = maps[i].ToJson();
     }
 
-    Json::ToFile(historyFile, jsonMaps);
+    Json::ToFile(historyFile, jsonMaps, true);
 }
