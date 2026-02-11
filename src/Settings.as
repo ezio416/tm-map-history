@@ -2,7 +2,7 @@
 bool S_Simple = false;
 
 [Setting category="General" name="Maximum history length" min=1 max=50]
-uint S_HistoryMax = 25;
+uint S_HistoryMax = 1000;
 
 [Setting category="General" name="Show option to open Downloaded folder"]
 bool S_DownloadedFolder = false;
