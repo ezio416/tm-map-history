@@ -25,8 +25,9 @@ class Map {
 
     Map(CGameCtnChallenge@ challenge) {
         CSystemFidFile@ File = GetFidFromNod(challenge);
-        if (File !is null)
+        if (File !is null) {
             cachePath = string(File.FullFileName).Replace("\\", "/");
+        }
 
         nameRaw      = challenge.MapName;
         nameColored  = Text::OpenplanetFormatCodes(nameRaw);
@@ -35,7 +36,6 @@ class Map {
         uid          = challenge.EdChallengeId;
     }
 
-    // courtesy of "Download Map" plugin - https://github.com/ezio416/tm-download-map
     void CopyFromCache() {
         trace("reading cached map file for " + nameQuoted + " at " + cachePath);
 
@@ -61,15 +61,17 @@ class Map {
     }
 
     void DownloadCoro() {
-        if (downloadingMap)
+        if (downloadingMap) {
             return;
+        }
 
         downloadingMap = true;
 
         if (downloadUrl == "") {
             awaitable@ urlCoro = startnew(CoroutineFunc(GetMapInfoCoro));
-            while (urlCoro.IsRunning())
+            while (urlCoro.IsRunning()) {
                 yield();
+            }
 
             gettingMapInfo = false;
 
@@ -83,8 +85,9 @@ class Map {
         trace("downloading map file for " + nameQuoted);
 
         Net::HttpRequest@ req = Net::HttpGet(downloadUrl);
-        while (!req.Finished())
+        while (!req.Finished()) {
             yield();
+        }
 
         string newPath = GetDownloadedFilePath();
 
@@ -104,8 +107,9 @@ class Map {
 
         if (downloadUrl == "") {
             awaitable@ urlCoro = startnew(CoroutineFunc(GetMapInfoCoro));
-            while (urlCoro.IsRunning())
+            while (urlCoro.IsRunning()) {
                 yield();
+            }
 
             gettingMapInfo = false;
 
@@ -115,8 +119,9 @@ class Map {
             }
         }
 
-        if (loadingMap)
+        if (loadingMap) {
             return;
+        }
 
         loadingMap = true;
 
@@ -124,13 +129,14 @@ class Map {
 
         ReturnToMenu();
 
-        CTrackMania@ App = cast<CTrackMania@>(GetApp());
+        auto App = cast<CTrackMania>(GetApp());
         App.ManiaTitleControlScriptAPI.EditMap(downloadUrl, "", "");
 
         const uint64 waitToEditAgain = 5000;
         const uint64 now = Time::Now;
-        while (Time::Now - now < waitToEditAgain)
+        while (Time::Now - now < waitToEditAgain) {
             yield();
+        }
 
         loadingMap = false;
     }
@@ -143,8 +149,9 @@ class Map {
         while (true) {
             newPath = newName + ".Map.Gbx";
 
-            if (!IO::FileExists(newPath))
+            if (!IO::FileExists(newPath)) {
                 break;
+            }
 
             trace("file exists: " + newPath);
             newName = newName.Replace(" (" + (i - 1) + ")", "") + " (" + i++ + ")";
@@ -155,44 +162,54 @@ class Map {
 
     // courtesy of "BetterTOTD" plugin - https://github.com/XertroV/tm-better-totd
     void GetMapInfoCoro() {
-        if (gettingMapInfo)
+        if (gettingMapInfo) {
             return;
+        }
 
         gettingMapInfo = true;
 
         trace("getting map info for " + nameQuoted);
 
-        if (uid.Length != 26 && uid.Length != 27) {
+        if (true
+            and uid.Length != 26
+            and uid.Length != 27
+        ) {
             warn("bad uid: " + uid);
             return;
         }
 
-        CTrackMania@ App = cast<CTrackMania@>(GetApp());
+        auto App = cast<CTrackMania>(GetApp());
 
-        CTrackManiaMenus@ Manager = cast<CTrackManiaMenus@>(App.MenuManager);
-        if (Manager is null)
+        auto Manager = cast<CTrackManiaMenus>(App.MenuManager);
+        if (Manager is null) {
             return;
+        }
 
         CGameManiaAppTitle@ Title = Manager.MenuCustom_CurrentManiaApp;
-        if (Title is null)
+        if (Title is null) {
             return;
+        }
 
         CGameUserManagerScript@ UserMgr = Title.UserMgr;
-        if (UserMgr is null || UserMgr.Users.Length == 0)
+        if (UserMgr is null || UserMgr.Users.Length == 0) {
             return;
+        }
 
         CGameUserScript@ User = UserMgr.Users[0];
-        if (User is null)
+        if (User is null) {
             return;
+        }
 
         CGameDataFileManagerScript@ FileMgr = Title.DataFileMgr;
-        if (FileMgr is null)
+        if (FileMgr is null) {
             return;
+        }
 
         CWebServicesTaskResult_NadeoServicesMapScript@ task = FileMgr.Map_NadeoServices_GetFromUid(User.Id, uid);
 
-        while (task.IsProcessing)
+        while (task.IsProcessing) {
             yield();
+        }
 
         if (task.HasSucceeded) {
             CNadeoServicesMap@ Map = task.Map;
@@ -218,8 +235,9 @@ class Map {
 
         if (downloadUrl == "") {
             awaitable@ urlCoro = startnew(CoroutineFunc(GetMapInfoCoro));
-            while (urlCoro.IsRunning())
+            while (urlCoro.IsRunning()) {
                 yield();
+            }
 
             gettingMapInfo = false;
 
@@ -229,8 +247,9 @@ class Map {
             }
         }
 
-        if (loadingMap)
+        if (loadingMap) {
             return;
+        }
 
         loadingMap = true;
 
@@ -244,13 +263,14 @@ class Map {
 
         ReturnToMenu();
 
-        CTrackMania@ App = cast<CTrackMania@>(GetApp());
+        auto App = cast<CTrackMania>(GetApp());
         App.ManiaTitleControlScriptAPI.PlayMap(downloadUrl, "TrackMania/TM_PlayMap_Local", "");
 
         const uint64 waitToPlayAgain = 5000;
         const uint64 now = Time::Now;
-        while (Time::Now - now < waitToPlayAgain)
+        while (Time::Now - now < waitToPlayAgain) {
             yield();
+        }
 
         loadingMap = false;
     }
