@@ -116,11 +116,7 @@ class Map {
         auto App = cast<CTrackMania>(GetApp());
         App.ManiaTitleControlScriptAPI.EditMap(downloadUrl, "", "");
 
-        const uint64 waitToEditAgain = 5000;
-        const uint64 now = Time::Now;
-        while (Time::Now - now < waitToEditAgain) {
-            yield();
-        }
+        sleep(5000);
 
         loadingMap = false;
     }
@@ -250,11 +246,7 @@ class Map {
         auto App = cast<CTrackMania>(GetApp());
         App.ManiaTitleControlScriptAPI.PlayMap(downloadUrl, "TrackMania/TM_PlayMap_Local", "");
 
-        const uint64 waitToPlayAgain = 5000;
-        const uint64 now = Time::Now;
-        while (Time::Now - now < waitToPlayAgain) {
-            yield();
-        }
+        sleep(5000);
 
         loadingMap = false;
     }
