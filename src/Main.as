@@ -41,11 +41,12 @@ void RenderMenu() {
             or maps.Length > 0
         )
     )) {
-        if (true
-            and S_DownloadedFolder
-            and UI::MenuItem(Icons::ExternalLink + " Open \"Downloaded\" Folder")
-        ) {
-            OpenExplorerPath(downloadedFolder);
+        if (S_DownloadedFolder) {
+            if (UI::MenuItem(Icons::ExternalLink + " Open \"Downloaded\" Folder")) {
+                OpenExplorerPath(downloadedFolder);
+            }
+
+            UI::Separator();
         }
 
         for (int i = maps.Length - 1; i >= 0; i--) {
