@@ -41,13 +41,17 @@ class Map {
 
         if (!IO::FileExists(cachePath)) {
             warn("cached map file not found!");
-            startnew(CoroutineFunc(DownloadAsync));
+            Download();
             return;
         }
 
         string newPath = GetDownloadedFilePath();
         trace("saving new map file to " + newPath);
         IO::Copy(cachePath, newPath);
+    }
+
+    void Download() {
+        startnew(CoroutineFunc(DownloadAsync));
     }
 
     void DownloadAsync() {
@@ -83,6 +87,10 @@ class Map {
         req.SaveToFile(newPath);
 
         downloadingMap = false;
+    }
+
+    void Edit() {
+        startnew(CoroutineFunc(EditAsync));
     }
 
     // courtesy of "Play Map" plugin - https://github.com/XertroV/tm-play-map
@@ -185,6 +193,10 @@ class Map {
     void OpenTmio() {
         trace("opening Trackmania.io page for " + nameQuoted);
         OpenBrowserURL("https://trackmania.io/#/leaderboard/" + uid);
+    }
+
+    void Play() {
+        startnew(CoroutineFunc(PlayAsync));
     }
 
     // courtesy of "Play Map" plugin - https://github.com/XertroV/tm-play-map

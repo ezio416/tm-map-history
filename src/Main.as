@@ -53,31 +53,31 @@ void RenderMenu() {
 
             if (S_Simple) {
                 if (UI::MenuItem((S_MapNameColor ? map.nameColored : map.nameStripped) + "##" + map.uid)) {
-                    startnew(CoroutineFunc(map.PlayAsync));
+                    map.Play();
                 }
 
                 if (true
                     and UI::IsItemHovered()
                     and UI::IsMouseReleased(UI::MouseButton::Right)
                 ) {
-                    startnew(CoroutineFunc(map.EditAsync));
+                    map.Edit();
                 }
             } else {
                 if (UI::BeginMenu((S_MapNameColor ? map.nameColored : map.nameStripped) + "##" + map.uid)) {
                     if (UI::MenuItem(Icons::Play + " Play")) {
                         UI::BeginDisabled(!hasPlayPermission);
-                        startnew(CoroutineFunc(map.PlayAsync));
+                        map.Play();
                         UI::EndDisabled();
                     }
 
                     if (UI::MenuItem(Icons::Pencil + " Edit")) {
                         UI::BeginDisabled(!hasEditPermission);
-                        startnew(CoroutineFunc(map.EditAsync));
+                        map.Edit();
                         UI::EndDisabled();
                     }
 
                     if (UI::MenuItem(Icons::Download + " Download")) {
-                        startnew(CoroutineFunc(map.CopyFromCache));
+                        map.CopyFromCache();
                     }
 
                     if (UI::MenuItem(Icons::Heartbeat + " Trackmania.io")) {
