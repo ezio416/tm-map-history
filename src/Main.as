@@ -53,26 +53,26 @@ void RenderMenu() {
 
             if (S_Simple) {
                 if (UI::MenuItem((S_MapNameColor ? map.nameColored : map.nameStripped) + "##" + map.uid)) {
-                    startnew(CoroutineFunc(map.PlayCoro));
+                    startnew(CoroutineFunc(map.PlayAsync));
                 }
 
                 if (true
                     and UI::IsItemHovered()
                     and UI::IsMouseReleased(UI::MouseButton::Right)
                 ) {
-                    startnew(CoroutineFunc(map.EditCoro));
+                    startnew(CoroutineFunc(map.EditAsync));
                 }
             } else {
                 if (UI::BeginMenu((S_MapNameColor ? map.nameColored : map.nameStripped) + "##" + map.uid)) {
                     if (UI::MenuItem(Icons::Play + " Play")) {
                         UI::BeginDisabled(!hasPlayPermission);
-                        startnew(CoroutineFunc(map.PlayCoro));
+                        startnew(CoroutineFunc(map.PlayAsync));
                         UI::EndDisabled();
                     }
 
                     if (UI::MenuItem(Icons::Pencil + " Edit")) {
                         UI::BeginDisabled(!hasEditPermission);
-                        startnew(CoroutineFunc(map.EditCoro));
+                        startnew(CoroutineFunc(map.EditAsync));
                         UI::EndDisabled();
                     }
 

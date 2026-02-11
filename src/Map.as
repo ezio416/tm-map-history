@@ -19,7 +19,7 @@ class Map {
         nameRaw      = map["nameRaw"];
         nameColored  = Text::OpenplanetFormatCodes(nameRaw);
         nameStripped = Text::StripFormatCodes(nameRaw);
-        nameQuoted   = "\"" + nameStripped + "\"";
+        nameQuoted   = '"' + nameStripped + '"';
         uid          = map["uid"];
     }
 
@@ -32,7 +32,7 @@ class Map {
         nameRaw      = challenge.MapName;
         nameColored  = Text::OpenplanetFormatCodes(nameRaw);
         nameStripped = Text::StripFormatCodes(nameRaw);
-        nameQuoted   = "\"" + nameStripped + "\"";
+        nameQuoted   = '"' + nameStripped + '"';
         uid          = challenge.EdChallengeId;
     }
 
@@ -41,41 +41,28 @@ class Map {
 
         if (!IO::FileExists(cachePath)) {
             warn("cached map file not found!");
-            startnew(CoroutineFunc(DownloadCoro));
+            startnew(CoroutineFunc(DownloadAsync));
             return;
         }
 
-        IO::File oldFile(cachePath);
-        oldFile.Open(IO::FileMode::Read);
-        MemoryBuffer@ buf = oldFile.Read(oldFile.Size());
-        oldFile.Close();
-
         string newPath = GetDownloadedFilePath();
-
         trace("saving new map file to " + newPath);
-
-        IO::File newFile(newPath);
-        newFile.Open(IO::FileMode::Write);
-        newFile.Write(buf);
-        newFile.Close();
+        IO::Copy(cachePath, newPath);
     }
 
-    void DownloadCoro() {
+    void DownloadAsync() {
         if (downloadingMap) {
             return;
         }
 
         downloadingMap = true;
 
-        if (downloadUrl == "") {
-            awaitable@ urlCoro = startnew(CoroutineFunc(GetMapInfoCoro));
-            while (urlCoro.IsRunning()) {
-                yield();
-            }
+        if (downloadUrl.Length == 0) {
+            GetMapInfoAsync();
 
             gettingMapInfo = false;
 
-            if (downloadUrl == "") {
+            if (downloadUrl.Length == 0) {
                 warn("can't download: blank url for " + nameQuoted);
                 downloadingMap = false;
                 return;
@@ -99,21 +86,18 @@ class Map {
     }
 
     // courtesy of "Play Map" plugin - https://github.com/XertroV/tm-play-map
-    void EditCoro() {
+    void EditAsync() {
         if (!hasEditPermission) {
             warn("user doesn't have permission to use the advanced editor");
             return;
         }
 
-        if (downloadUrl == "") {
-            awaitable@ urlCoro = startnew(CoroutineFunc(GetMapInfoCoro));
-            while (urlCoro.IsRunning()) {
-                yield();
-            }
+        if (downloadUrl.Length == 0) {
+            GetMapInfoAsync();
 
             gettingMapInfo = false;
 
-            if (downloadUrl == "") {
+            if (downloadUrl.Length == 0) {
                 warn("can't edit: blank url for " + nameQuoted);
                 return;
             }
@@ -161,7 +145,7 @@ class Map {
     }
 
     // courtesy of "BetterTOTD" plugin - https://github.com/XertroV/tm-better-totd
-    void GetMapInfoCoro() {
+    void GetMapInfoAsync() {
         if (gettingMapInfo) {
             return;
         }
@@ -191,7 +175,10 @@ class Map {
         }
 
         CGameUserManagerScript@ UserMgr = Title.UserMgr;
-        if (UserMgr is null || UserMgr.Users.Length == 0) {
+        if (false
+            or UserMgr is null
+            or UserMgr.Users.Length == 0
+        ) {
             return;
         }
 
@@ -227,21 +214,18 @@ class Map {
     }
 
     // courtesy of "Play Map" plugin - https://github.com/XertroV/tm-play-map
-    void PlayCoro() {
+    void PlayAsync() {
         if (!hasPlayPermission) {
             warn("user doesn't have permission to play local maps");
             return;
         }
 
-        if (downloadUrl == "") {
-            awaitable@ urlCoro = startnew(CoroutineFunc(GetMapInfoCoro));
-            while (urlCoro.IsRunning()) {
-                yield();
-            }
+        if (downloadUrl.Length == 0) {
+            GetMapInfoAsync();
 
             gettingMapInfo = false;
 
-            if (downloadUrl == "") {
+            if (downloadUrl.Length == 0) {
                 warn("can't play: blank url for " + nameQuoted);
                 return;
             }
