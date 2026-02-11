@@ -1,6 +1,3 @@
-// c 2023-12-27
-// m 2024-05-24
-
 const string downloadedFolder  = IO::FromUserGameFolder("Maps/Downloaded").Replace("\\", "/");
 bool         hasEditPermission = false;
 bool         hasPlayPermission = false;

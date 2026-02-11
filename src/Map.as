@@ -1,6 +1,3 @@
-// c 2023-12-27
-// m 2025-06-08
-
 bool downloadingMap = false;
 bool gettingMapInfo = false;
 bool loadingMap     = false;

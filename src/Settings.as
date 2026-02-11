@@ -1,6 +1,3 @@
-// c 2023-12-28
-// m 2024-05-24
-
 [Setting category="General" name="Simple mode" description="Left-click to play, right-click to edit"]
 bool S_Simple = false;
 
