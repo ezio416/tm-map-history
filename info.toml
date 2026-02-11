@@ -2,7 +2,7 @@
 name = "Map History"
 author = "Ezio"
 category = "Utilities"
-version = "1.2.0"
+version = "1.2.1"
 siteid = 476
 
 [script]

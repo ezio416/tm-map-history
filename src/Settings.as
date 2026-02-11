@@ -1,7 +1,7 @@
 [Setting category="General" name="Simple mode" description="Left-click to play, right-click to edit"]
 bool S_Simple = false;
 
-[Setting category="General" name="Maximum history length" min=1 max=50]
+[Setting category="General" name="Maximum history length" min=1 max=10000]
 uint S_HistoryMax = 1000;
 
 [Setting category="General" name="Show option to open Downloaded folder"]
