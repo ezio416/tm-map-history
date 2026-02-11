@@ -140,7 +140,6 @@ class Map {
         return newPath;
     }
 
-    // courtesy of "BetterTOTD" plugin - https://github.com/XertroV/tm-better-totd
     void GetMapInfoAsync() {
         if (gettingMapInfo) {
             return;
@@ -150,58 +149,37 @@ class Map {
 
         trace("getting map info for " + nameQuoted);
 
-        if (true
-            and uid.Length != 26
-            and uid.Length != 27
+        if (false
+            or uid.Length < 24
+            or uid.Length > 27
         ) {
             warn("bad uid: " + uid);
             return;
         }
 
-        auto App = cast<CTrackMania>(GetApp());
-
-        auto Manager = cast<CTrackManiaMenus>(App.MenuManager);
-        if (Manager is null) {
-            return;
-        }
-
-        CGameManiaAppTitle@ Title = Manager.MenuCustom_CurrentManiaApp;
-        if (Title is null) {
-            return;
-        }
-
-        CGameUserManagerScript@ UserMgr = Title.UserMgr;
-        if (false
-            or UserMgr is null
-            or UserMgr.Users.Length == 0
-        ) {
-            return;
-        }
-
-        CGameUserScript@ User = UserMgr.Users[0];
-        if (User is null) {
-            return;
-        }
-
-        CGameDataFileManagerScript@ FileMgr = Title.DataFileMgr;
-        if (FileMgr is null) {
-            return;
-        }
-
-        CWebServicesTaskResult_NadeoServicesMapScript@ task = FileMgr.Map_NadeoServices_GetFromUid(User.Id, uid);
-
-        while (task.IsProcessing) {
+        const string audience = "NadeoServices";
+        NadeoServices::AddAudience(audience);
+        while (!NadeoServices::IsAuthenticated(audience)) {
             yield();
         }
 
-        if (task.HasSucceeded) {
-            CNadeoServicesMap@ Map = task.Map;
-            downloadUrl = Map.FileUrl;
-
-            FileMgr.TaskResult_Release(task.Id);
-
-            SaveHistoryFile();
+        Net::HttpRequest@ req = NadeoServices::Get(
+            audience,
+            NadeoServices::BaseURLCore() + "/maps/by-uid/?mapUidList=" + uid
+        );
+        req.Start();
+        while (!req.Finished()) {
+            yield();
         }
+
+        try {
+            downloadUrl = req.Json()[0]["fileUrl"];
+        } catch {
+            error("failed to get map info: " + getExceptionInfo());
+            return;
+        }
+
+        SaveHistoryFile();
     }
 
     void OpenTmio() {
