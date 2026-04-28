@@ -83,7 +83,7 @@ namespace Database {
     void Add(Map@[]@ maps) {
         if (false
             or maps is null
-            or maps.Length == 0
+            or maps.IsEmpty()
         ) {
             warn("no maps to add");
             return;
@@ -103,23 +103,32 @@ namespace Database {
         }
     }
 
-    // void Load() {
-    //     auto db = Lock();
+    void Load() {
+        trace("loading maps");
 
-    //     maps = {};
+        maps = {};
+        mapsByUid.DeleteAll();
 
-    //     SQLite::Statement@ s;
-    //     try {
-    //         @s = db.Prepare("SELECT * FROM " + TABLE);
-    //     } catch {
-    //         error("Database::Load(): " + getExceptionInfo());
-    //         return;
-    //     }
+        SQLite::Statement@ s;
+        try {
+            @s = Lock().Prepare("SELECT * FROM " + TABLE);
+        } catch {
+            error("Database::Load(): " + getExceptionInfo());
+            return;
+        }
 
-    //     while (s.NextRow()) {
-    //         ;
-    //     }
-    // }
+        while (s.NextRow()) {
+            auto map = Map(s);
+            maps.InsertLast(@map);
+            mapsByUid.Set(map.uid, @map);
+        }
+
+        if (!maps.IsEmpty()) {
+            trace("loaded " + maps.Length + " maps");
+        } else {
+            warn("no maps to load");
+        }
+    }
 
     // bool MigrateFromJson() {
     //     if (false

@@ -50,6 +50,20 @@ class Map {
         uid          = map.EdChallengeId;
     }
 
+    Map(SQLite::Statement@ s) {
+        authorId     = s.GetColumnString("authorId");
+        lastPlayed   = s.GetColumnInt64("lastPlayed");
+        id           = s.GetColumnString("mapId");
+        uid          = s.GetColumnString("mapUid");
+        nameRaw      = s.GetColumnString("nameRaw");
+        nameColored  = Text::OpenplanetFormatCodes(nameRaw);
+        nameStripped = Text::StripFormatCodes(nameRaw);
+        ordinal      = s.GetColumnInt("ordinal");
+        source       = MapSource(s.GetColumnInt("source"));
+        tmxId        = s.GetColumnInt("tmxId");
+        type         = MapType(s.GetColumnInt("type"));
+    }
+
     void Download() {
         startnew(CoroutineFunc(DownloadAsync));
     }

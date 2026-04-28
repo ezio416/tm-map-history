@@ -4,6 +4,8 @@ Meta::Plugin@ pluginMeta  = Meta::ExecutingPlugin();
 const string  pluginTitle = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name;
 
 void Main() {
+    Database::Load();
+
     auto App = cast<CTrackMania>(GetApp());
 
     bool inMap = false;
@@ -25,8 +27,8 @@ void Main() {
                 if (map is null) {
                     @map = Map(App.RootMap);
                     map.GetInfoAsync();
+                    maps.InsertLast(@map);
                     mapsByUid.Set(map.uid, @map);
-                    maps.InsertLast(map);
                 }
 
                 map.lastPlayed = Time::Stamp;
