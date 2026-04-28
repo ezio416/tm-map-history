@@ -73,29 +73,39 @@ void RenderWindow() {
         Map@ map = maps[i];
         UI::PushID(map.uid);
 
+        UI::AlignTextToFramePadding();
         UI::Text(map.uid + (map.id.Length > 0 ? " (" + map.id + ")" : ""));
+
         UI::SameLine();
         if (UI::Button(Icons::Play)) {
             map.Play();
         }
+
         UI::SameLine();
         if (UI::Button(Icons::Pencil)) {
             map.Edit();
         }
+
         UI::SameLine();
         if (UI::Button(Icons::Heartbeat)) {
             map.OpenTmio();
         }
+
         UI::SameLine();
         if (UI::Button(Icons::Exchange)) {
             map.OpenTmx();
         }
+
         UI::SameLine();
         if (UI::Button(Icons::Download)) {
             map.Download();
         }
 
-        UI::Text(Time::FormatString("    %F %T", map.lastPlayed));
+        if (map.lastPlayed > 0) {
+            UI::SameLine();
+            UI::AlignTextToFramePadding();
+            UI::Text(Time::FormatString("    %F %T", map.lastPlayed));
+        }
 
         UI::PopID();
     }

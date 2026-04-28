@@ -10,7 +10,7 @@ enum MapSource {
     Unknown = -1,
     Plugin,
     Cache,
-    Autosave
+    Replay
 }
 
 enum MapType {
@@ -41,6 +41,10 @@ class Map {
 
     string get_thumbnailUrl() {
         return "https://core.trackmania.nadeo.live/maps/" + id + "/thumbnail.jpg";
+    }
+
+    Map(const string&in uid) {
+        this.uid = uid;
     }
 
     Map(CGameCtnChallenge@ map) {
@@ -208,9 +212,7 @@ class Map {
             Json::Value@ json = req.Json();
 
             authorId = string(json[0]["author"]);
-
             id = string(json[0]["mapId"]);
-
             nameRaw = string(json[0]["name"]);
             nameColored = Text::OpenplanetFormatCodes(nameRaw);
             nameStripped = Text::StripFormatCodes(nameRaw);
@@ -355,4 +357,97 @@ class Map {
             + int(type)
         + ")";
     }
+}
+
+void GetInfosAsync(dictionary@ needsInfo) {
+    if (false
+        or needsInfo is null
+        or needsInfo.IsEmpty()
+    ) {
+        warn("no maps to get info for");
+        return;
+    }
+
+    trace("getting info for " + needsInfo.GetSize() + " maps");
+
+    const string audience = "NadeoServices";
+    NadeoServices::AddAudience(audience);
+    while (!NadeoServices::IsAuthenticated(audience)) {
+        yield();
+    }
+
+    string[] uids = needsInfo.GetKeys();
+    const uint MAX_UIDS = 290;
+    uint successful = 0;
+
+    while (!uids.IsEmpty()) {
+        string[] group;
+        const uint GROUP_SIZE = Math::Min(uids.Length, MAX_UIDS);
+        for (uint i = 0; i < GROUP_SIZE; i++) {
+            group.InsertLast(uids[0]);
+            uids.RemoveAt(0);
+        }
+        trace("maps this group: " + group.Length);
+
+        sleep(500);
+        Net::HttpRequest@ req = NadeoServices::Get(
+            audience,
+            NadeoServices::BaseURLCore() + "/maps/by-uid/?mapUidList=" + Text::Join(group, ",")
+        );
+        req.Start();
+        while (!req.Finished()) {
+            yield();
+        }
+
+        const int code = req.ResponseCode();
+        if (code != 200) {
+            error("bad response for group (" + code + "): " + req.String());
+            continue;
+        }
+
+        try {
+            Json::Value@ json = req.Json();
+            if (json.GetType() != Json::Type::Array) {
+                warn("bad json for group: " + req.String());
+                continue;
+            }
+
+            trace("request returned info for " + json.Length + " maps");
+
+            for (uint i = 0; i < json.Length; i++) {
+                const string UID = string(json[i]["mapUid"]);
+                Map@ map;
+                needsInfo.Get(UID, @map);
+                if (map is null) {
+                    warn("map doesn't exist: " + StrWrap(UID));
+                    continue;
+                }
+
+                map.authorId = string(json[i]["author"]);
+                map.id = string(json[i]["mapId"]);
+                map.nameRaw = string(json[i]["name"]);
+
+                const string TYPE = string(json[i]["mapType"]);
+                if (TYPE.EndsWith("TM_Race")) {
+                    map.type = bool(json[i]["hasClones"])
+                        ? MapType::RaceClones
+                        : MapType::Race
+                    ;
+                } else if (TYPE.EndsWith("TM_Platform")) {
+                    map.type = MapType::Platform;
+                } else if (TYPE.EndsWith("TM_Royal")) {
+                    map.type = MapType::Royal;
+                } else if (TYPE.EndsWith("TM_Stunt")) {
+                    map.type = MapType::Stunt;
+                }
+
+                successful++;
+            }
+
+        } catch {
+            error("bad json for group: " + req.String());
+        }
+    }
+
+    trace("got info for " + successful + "/" + needsInfo.GetSize() + " maps");
 }

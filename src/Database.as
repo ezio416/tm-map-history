@@ -80,6 +80,31 @@ namespace Database {
         }
     }
 
+    void AddMany(Map@[]@ maps) {
+        if (false
+            or maps is null
+            or maps.IsEmpty()
+        ) {
+            warn("no maps to add");
+            return;
+        }
+
+        auto db = Lock();
+        uint64 lastYield = Time::Now;
+
+        for (uint i = 0; i < maps.Length; i++) {  // TODO optimize
+            Add(db, maps[i]);
+
+            if (Time::Now - lastYield > 50) {
+                trace("added " + (i + 1) + " maps");
+                lastYield = Time::Now;
+                yield();
+            }
+        }
+
+        trace("added " + maps.Length + " maps");
+    }
+
     void Clear() {
         try {
             Lock().Execute("DELETE FROM " + TABLE);
@@ -113,6 +138,65 @@ namespace Database {
         } else {
             warn("no maps to load");
         }
+    }
+
+    void LoadFromReplaysAsync() {
+        auto App = cast<CTrackMania>(GetApp());
+
+        int64 tzOffset = 0;
+        string[]@ offsetParts = App.SystemPlatform.CurrentTimezoneTimeOffset.Split(":");
+        if (offsetParts.Length == 2) {
+            int64 hours = 0;
+            if (!Text::TryParseInt64(offsetParts[0], hours)) {
+                error("failed parsing timezone offset hours: " + offsetParts[0]);
+                return;
+            }
+
+            int64 minutes = 0;
+            if (!Text::TryParseInt64(offsetParts[1], minutes)) {
+                error("failed parsing timezone offset minutes: " + offsetParts[0]);
+                return;
+            }
+
+            tzOffset = Math::Abs(hours) * 3600 + minutes * 60;
+            if (hours < 0) {
+                tzOffset *= -1;
+            }
+        }
+
+        Map@[] needsInfo;
+        dictionary needsInfoByUid;
+
+        for (uint i = 0; i < App.ReplayRecordInfos.Length; i++) {
+            CGameCtnReplayRecordInfo@ Replay = App.ReplayRecordInfos[i];
+            if (false
+                or Replay is null
+                or Replay.Fid is null
+                or Replay.MapUid.Length == 0
+            ) {
+                continue;
+            }
+
+            Map@ map;
+            mapsByUid.Get(Replay.MapUid, @map);
+            if (map is null) {
+                @map = Map(Replay.MapUid);
+                map.source = MapSource::Replay;
+            }
+
+            const int64 timeWrite = Time::ParseFormatString("%d/%m/%Y %H:%M", Replay.Fid.TimeWrite) - tzOffset;
+            if (timeWrite > map.lastPlayed) {
+                map.lastPlayed = timeWrite;
+                map.ordinal = -1;
+            }
+
+            needsInfo.InsertLast(@map);
+            needsInfoByUid.Set(map.uid, @map);
+        }
+
+        GetInfosAsync(needsInfoByUid);
+        AddMany(needsInfo);
+        Load();
     }
 
     void MigrateFromJsonAsync() {
@@ -150,37 +234,22 @@ namespace Database {
         }
 
         Map@[] toMigrate;
+        dictionary toMigrateByUid;
+
         for (uint i = 0; i < json.Length; i++) {
             try {
                 auto map = Map(json[tostring(i)]);
                 map.ordinal = i;
                 map.source = MapSource::Plugin;
-                toMigrate.InsertLast(map);
+                toMigrate.InsertLast(@map);
+                toMigrateByUid.Set(map.uid, @map);
             } catch {
                 error("Database::MigrateFromJson(): " + getExceptionInfo());
             }
         }
 
-        if (false
-            or toMigrate is null
-            or toMigrate.IsEmpty()
-        ) {
-            warn("no maps to add");
-            return;
-        }
-
-        auto db = Lock();
-        uint64 lastYield = Time::Now;
-
-        for (uint i = 0; i < toMigrate.Length; i++) {
-            Add(db, toMigrate[i]);
-
-            if (Time::Now - lastYield > 50) {
-                print("migrated " + (i + 1) + " maps from json");
-                lastYield = Time::Now;
-                yield();
-            }
-        }
+        GetInfosAsync(toMigrateByUid);
+        AddMany(toMigrate);
 
         S_Migrated = true;
     }
