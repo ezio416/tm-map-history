@@ -350,12 +350,20 @@ class Map {
 
         ReturnToMenu();
 
+        string mode = "TrackMania/TM_PlayMap_Local";
+        switch (type) {
+            case MapType::Stunt:
+                mode = "TrackMania/TM_StuntSolo_Local";
+                break;
+            case MapType::Platform:
+                mode = "TrackMania/TM_Platform_Local";
+                break;
+            case MapType::Royal:
+                mode = "TrackMania/TM_RoyalTimeAttack_Local";
+        }
+
         auto App = cast<CTrackMania>(GetApp());
-        App.ManiaTitleControlScriptAPI.PlayMap(
-            downloadUrl,
-            "TrackMania/TM_PlayMap_Local",  // TODO check map type
-            ""
-        );
+        App.ManiaTitleControlScriptAPI.PlayMap(downloadUrl, mode, "");
 
         sleep(5000);
 

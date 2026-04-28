@@ -83,6 +83,9 @@ void RenderWindow() {
         UI::Text(map.uid + (map.id.Length > 0 ? " (" + map.id + ")" : ""));
 
         UI::SameLine();
+        UI::Text(tostring(map.type));
+
+        UI::SameLine();
         if (UI::Button(Icons::Play)) {
             map.Play();
         }
