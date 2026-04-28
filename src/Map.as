@@ -29,7 +29,7 @@ class Map {
     string    nameColored;
     string    nameRaw;
     string    nameStripped;
-    int       ordinal     = -1;
+    int       ordinal     = -1;  // legacy from json
     MapSource source      = MapSource::Unknown;
     int       tmxId       = -1;
     MapType   type        = MapType::Unknown;
@@ -62,6 +62,15 @@ class Map {
         source       = MapSource(s.GetColumnInt("source"));
         tmxId        = s.GetColumnInt("tmxId");
         type         = MapType(s.GetColumnInt("type"));
+    }
+
+    Map(Json::Value@ json) {  // only for migration
+        const auto url = string(json["downloadUrl"]);
+        if (url.Length > 0) {
+            id = url.Split("/maps/")[1].Split("/")[0];
+        }
+        nameRaw = string(json["nameRaw"]);
+        uid = string(json["uid"]);
     }
 
     void Download() {

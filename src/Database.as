@@ -26,8 +26,8 @@ namespace Database {
     const string FILE_OLD_BAD = IO::FromStorageFolder("history_bad.json");
     const string TABLE        = "Maps";
 
-    // [Setting hidden]
-    // bool S_Migrated = false;
+    [Setting hidden]
+    bool S_Migrated = false;
 
     bool locked = false;
 
@@ -80,21 +80,6 @@ namespace Database {
         }
     }
 
-    void Add(Map@[]@ maps) {
-        if (false
-            or maps is null
-            or maps.IsEmpty()
-        ) {
-            warn("no maps to add");
-            return;
-        }
-
-        auto db = Lock();
-        for (uint i = 0; i < maps.Length; i++) {
-            Add(db, maps[i]);
-        }
-    }
-
     void Clear() {
         try {
             Lock().Execute("DELETE FROM " + TABLE);
@@ -130,56 +115,75 @@ namespace Database {
         }
     }
 
-    // bool MigrateFromJson() {
-    //     if (false
-    //         or S_Migrated
-    //         or !IO::FileExists(FILE_OLD)
-    //     ) {
-    //         S_Migrated = true;
-    //         return false;
-    //     }
+    void MigrateFromJsonAsync() {
+        if (false
+            or S_Migrated
+            or !IO::FileExists(FILE_OLD)
+        ) {
+            S_Migrated = true;
+            return;
+        }
 
-    //     Json::Value@ json;
-    //     try {
-    //         @json = Json::FromFile(FILE_OLD);
-    //     } catch {
-    //         error("Database::MigrateFromJson(): " + getExceptionInfo());
-    //         S_Migrated = true;
-    //         return false;
-    //     }
+        Json::Value@ json;
+        try {
+            @json = Json::FromFile(FILE_OLD);
+        } catch {
+            error("Database::MigrateFromJson(): " + getExceptionInfo());
+            S_Migrated = true;
+            return;
+        }
 
-    //     if (false
-    //         or json.GetType() != Json::Type::Object
-    //         or json.Length == 0
-    //     ) {
-    //         warn("no maps to migrate");
+        if (false
+            or json.GetType() != Json::Type::Object
+            or json.Length == 0
+        ) {
+            warn("no maps to migrate");
 
-    //         try {
-    //             IO::Move(FILE_OLD, FILE_OLD_BAD);
-    //         } catch {
-    //             error("Database::MigrateFromJson(): " + getExceptionInfo());
-    //         }
+            try {
+                IO::Move(FILE_OLD, FILE_OLD_BAD);
+            } catch {
+                error("Database::MigrateFromJson(): " + getExceptionInfo());
+            }
 
-    //         S_Migrated = true;
-    //         return false;
-    //     }
+            S_Migrated = true;
+            return;
+        }
 
-    //     Map@[] toMigrate;
-    //     for (uint i = 0; i < json.Length; i++) {
-    //         try {
-    //             auto map = Map(json[tostring(i)]);
-    //             map.ordinal = i;
-    //             toMigrate.InsertLast(map);
-    //         } catch {
-    //             error("Database::MigrateFromJson(): " + getExceptionInfo());
-    //         }
-    //     }
+        Map@[] toMigrate;
+        for (uint i = 0; i < json.Length; i++) {
+            try {
+                auto map = Map(json[tostring(i)]);
+                map.ordinal = i;
+                map.source = MapSource::Plugin;
+                toMigrate.InsertLast(map);
+            } catch {
+                error("Database::MigrateFromJson(): " + getExceptionInfo());
+            }
+        }
 
-    //     Add(toMigrate);
+        if (false
+            or toMigrate is null
+            or toMigrate.IsEmpty()
+        ) {
+            warn("no maps to add");
+            return;
+        }
 
-    //     S_Migrated = true;
-    //     return true;
-    // }
+        auto db = Lock();
+        uint64 lastYield = Time::Now;
+
+        for (uint i = 0; i < toMigrate.Length; i++) {
+            Add(db, toMigrate[i]);
+
+            if (Time::Now - lastYield > 50) {
+                print("migrated " + (i + 1) + " maps from json");
+                lastYield = Time::Now;
+                yield();
+            }
+        }
+
+        S_Migrated = true;
+    }
 
     void Remove(const string&in uid) {
         if (false
