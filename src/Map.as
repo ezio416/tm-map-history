@@ -24,6 +24,7 @@ enum MapType {
 
 class Map {
     string    authorId;
+    bool      favorite    = false;
     string    id;
     int64     lastPlayed  = 0;
     string    nameColored;
@@ -357,6 +358,67 @@ class Map {
             + int(type)
         + ")";
     }
+}
+
+void GetFavoritesAsync() {
+    if (maps.IsEmpty()) {
+        warn("can't get favorites, no maps in history");
+        return;
+    }
+
+    const string audience = "NadeoLiveServices";
+    NadeoServices::AddAudience(audience);
+    while (!NadeoServices::IsAuthenticated(audience)) {
+        yield();
+    }
+
+    uint count = 0;
+    uint found = 0;
+    uint offset = 0;
+
+    do {
+        trace("getting favorites with offset " + offset);
+
+        sleep(500);
+        Net::HttpRequest@ req = NadeoServices::Get(
+            audience,
+            NadeoServices::BaseURLLive() + "/api/token/map/favorite?length=1000&offset=" + offset
+        );
+        req.Start();
+        while (!req.Finished()) {
+            yield();
+        }
+
+        const int code = req.ResponseCode();
+        if (code != 200) {
+            error("bad response getting favorites (" + code + "): " + req.String());
+            return;
+        }
+
+        try {
+            Json::Value@ json = req.Json();
+
+            count = uint(json["itemCount"]);
+
+            Json::Value@ list = json["mapList"];
+            for (uint i = 0; i < list.Length; i++) {
+                Map@ map;
+                mapsByUid.Get(list[i]["uid"], @map);
+                if (map !is null) {
+                    map.favorite = true;
+                    found++;
+                }
+            }
+
+        } catch {
+            error("bad json for favorites: " + req.String());
+        }
+
+        offset += 1000;
+
+    } while (offset < count);
+
+    trace("got " + count + " favorites, " + found + " of which are in the history");
 }
 
 void GetInfosAsync(dictionary@ needsInfo) {

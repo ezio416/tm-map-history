@@ -6,6 +6,7 @@ const string  pluginTitle = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name
 void Main() {
     Database::MigrateFromJsonAsync();
     Database::Load();
+    GetFavoritesAsync();
 
     auto App = cast<CTrackMania>(GetApp());
 
