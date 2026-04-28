@@ -30,6 +30,11 @@ void Main() {
                     @map = Map(App.RootMap);
                     maps.InsertLast(@map);
                     mapsByUid.Set(map.uid, @map);
+                } else if (map.lastPlayed > 0) {  // TODO make setting
+                    UI::ShowNotification(
+                        pluginTitle,
+                        Time::FormatString("You last played this map on %F at %T", map.lastPlayed)
+                    );
                 }
 
                 map.GetInfoAsync();
