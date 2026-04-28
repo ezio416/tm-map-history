@@ -24,13 +24,14 @@ void Main() {
 
                 if (map is null) {
                     @map = Map(App.RootMap);
-                    map.GetInfo();
+                    map.GetInfoAsync();
                     mapsByUid.Set(map.uid, @map);
                     maps.InsertLast(map);
                 }
 
                 map.lastPlayed = Time::Stamp;
                 map.source = MapSource::Plugin;
+                Database::Add(map);
             }
         }
     }
@@ -61,16 +62,6 @@ void RenderMenu() {
     if (UI::MenuItem(pluginTitle, "", S_Enabled)) {
         S_Enabled = !S_Enabled;
     }
-}
-
-bool InMap() {
-    auto App = cast<CTrackMania>(GetApp());
-
-    return true
-        and App.RootMap !is null
-        and App.CurrentPlayground !is null
-        and App.Editor is null
-    ;
 }
 
 void RenderWindow() {

@@ -1,5 +1,8 @@
 const string DOWNLOADED_FOLDER = IO::FromUserGameFolder("Maps/Downloaded").Replace("\\", "/");
 
+bool       downloadingMap = false;
+bool       gettingMapInfo = false;
+bool       loadingMap     = false;
 Map@[]     maps;
 dictionary mapsByUid;
 
@@ -21,12 +24,8 @@ enum MapType {
 
 class Map {
     string    authorId;
-    string    cachePath;
-    bool      downloading = false;
-    bool      gettingInfo = false;
     string    id;
     int64     lastPlayed  = 0;
-    bool      loading     = false;
     string    nameColored;
     string    nameRaw;
     string    nameStripped;
@@ -45,30 +44,11 @@ class Map {
     }
 
     Map(CGameCtnChallenge@ map) {
-        CSystemFidFile@ File = GetFidFromNod(map);
-        if (File !is null) {
-            cachePath = string(File.FullFileName).Replace("\\", "/");
-        }
-
         nameRaw      = map.MapName;
         nameColored  = Text::OpenplanetFormatCodes(nameRaw);
         nameStripped = Text::StripFormatCodes(nameRaw);
         uid          = map.EdChallengeId;
     }
-
-    // void CopyFromCache() {
-    //     trace("reading cached map file for '" + uid + "' at " + cachePath);
-
-    //     if (!IO::FileExists(cachePath)) {
-    //         warn("cached map file not found!");
-    //         Download();
-    //         return;
-    //     }
-
-    //     string newPath = GetDownloadedFilePath();
-    //     trace("saving new map file to " + newPath);
-    //     IO::Copy(cachePath, newPath);
-    // }
 
     void Download() {
         startnew(CoroutineFunc(DownloadAsync));
@@ -79,18 +59,18 @@ class Map {
             GetInfoAsync();
 
             if (id.Length == 0) {
-                warn("can't download '" + uid + "'");
+                warn("can't download " + StrWrap(uid));
                 return;
             }
         }
 
-        if (downloading) {
+        if (downloadingMap) {
             return;
         }
 
-        downloading = true;
+        downloadingMap = true;
 
-        trace("downloading map file for '" + uid + "'");
+        trace("downloading map file for " + StrWrap(uid));
 
         Net::HttpRequest@ req = Net::HttpGet(downloadUrl);
         while (!req.Finished()) {
@@ -104,10 +84,10 @@ class Map {
         try {
             req.SaveToFile(newPath);
         } catch {
-            error("failed saving '" + uid + "': " + getExceptionInfo());
+            error("failed saving " + StrWrap(uid) + ": " + getExceptionInfo());
         }
 
-        downloading = false;
+        downloadingMap = false;
     }
 
     void Edit() {
@@ -124,18 +104,18 @@ class Map {
             GetInfoAsync();
 
             if (id.Length == 0) {
-                warn("can't load '" + uid + "'");
+                warn("can't load " + StrWrap(uid));
                 return;
             }
         }
 
-        if (loading) {
+        if (loadingMap) {
             return;
         }
 
-        loading = true;
+        loadingMap = true;
 
-        trace("loading map '" + uid + "' for editing");
+        trace("loading map " + StrWrap(uid) + " for editing");
 
         ReturnToMenu();
 
@@ -144,7 +124,7 @@ class Map {
 
         sleep(5000);
 
-        loading = false;
+        loadingMap = false;
     }
 
     private string GetDownloadedFilePath() {
@@ -170,13 +150,13 @@ class Map {
     }
 
     void GetInfoAsync() {
-        if (gettingInfo) {
+        if (gettingMapInfo) {
             return;
         }
 
-        gettingInfo = true;
+        gettingMapInfo = true;
 
-        trace("getting info for '" + uid + "'");
+        trace("getting info for " + StrWrap(uid));
 
         const string audience = "NadeoServices";
         NadeoServices::AddAudience(audience);
@@ -196,8 +176,8 @@ class Map {
 
         const int code = req.ResponseCode();
         if (code != 200) {
-            error("bad response for '" + uid + "' (" + code + "): " + req.String());
-            gettingInfo = false;
+            error("bad response for " + StrWrap(uid) + " (" + code + "): " + req.String());
+            gettingMapInfo = false;
             return;
         }
 
@@ -226,19 +206,19 @@ class Map {
                 type = MapType::Stunt;
             }
 
-            trace("got info for '" + uid + "'");
+            trace("got info for " + StrWrap(uid));
 
         } catch {
-            error("bad json for '" + uid + "': " + req.String());
+            error("bad json for " + StrWrap(uid) + ": " + req.String());
         }
 
         GetTmxIdAsync();
 
-        gettingInfo = false;
+        gettingMapInfo = false;
     }
 
     private void GetTmxIdAsync() {
-        trace("getting TMX info for '" + uid + "'");
+        trace("getting TMX info for " + StrWrap(uid));
 
         const uint64 start = Time::Now;
 
@@ -250,7 +230,7 @@ class Map {
             yield();
 
             if (Time::Now - start > 5000) {
-                warn("timed out getting TMX info for '" + uid + "'");
+                warn("timed out getting TMX info for " + StrWrap(uid));
                 req.Cancel();
                 return;
             }
@@ -258,26 +238,26 @@ class Map {
 
         const int code = req.ResponseCode();
         if (code != 200) {
-            error("bad response (TMX) for '" + uid + "' (" + code + "): " + req.String());
+            error("bad response (TMX) for " + StrWrap(uid) + " (" + code + "): " + req.String());
             return;
         }
 
         try {
             tmxId = int(req.Json()["Results"][0]["MapId"]);
-            trace("got TMX info for '" + uid + "'");
+            trace("got TMX info for " + StrWrap(uid));
         } catch {
-            error("bad json (TMX) for '" + uid + "': " + req.String());
+            error("bad json (TMX) for " + StrWrap(uid) + ": " + req.String());
         }
     }
 
     void OpenTmio() {
-        trace("opening Trackmania.io page for '" + uid + "'");
+        trace("opening Trackmania.io page for " + StrWrap(uid));
         OpenBrowserURL("https://trackmania.io/#/leaderboard/" + uid);
     }
 
     void OpenTmx() {
         if (tmxId > -1) {
-            trace("opening Trackmania.exchange page for '" + uid + "'");
+            trace("opening Trackmania.exchange page for " + StrWrap(uid));
             OpenBrowserURL("https://trackmania.exchange/mapshow/" + tmxId);
         }
     }
@@ -296,18 +276,18 @@ class Map {
             GetInfoAsync();
 
             if (id.Length == 0) {
-                warn("can't load '" + uid + "'");
+                warn("can't load " + StrWrap(uid));
                 return;
             }
         }
 
-        if (loading) {
+        if (loadingMap) {
             return;
         }
 
-        loading = true;
+        loadingMap = true;
 
-        trace("loading map '" + uid + "' for playing");
+        trace("loading map " + StrWrap(uid) + " for playing");
 
         ReturnToMenu();
 
@@ -320,7 +300,7 @@ class Map {
 
         sleep(5000);
 
-        loading = false;
+        loadingMap = false;
     }
 
     private void ReturnToMenu() {
@@ -339,15 +319,17 @@ class Map {
         }
     }
 
-    // string ToQuery() {
-    //     return "("
-    //         + "'" + authorId + "',"
-    //         + "'" + cachePath.Replace("'", "''") + "',"
-    //         + lastPlayed + ","
-    //         + "'" + id + "',"
-    //         + "'" + uid + "',"
-    //         + "'" + nameRaw.Replace("'", "''") + "',"
-    //         + ordinal
-    //     + ")";
-    // }
+    string ToQuery() {
+        return "("
+            + StrWrap(authorId) + ","
+            + lastPlayed + ","
+            + StrWrap(id) + ","
+            + StrWrap(uid) + ","
+            + StrWrap(nameRaw.Replace("'", "''")) + ","
+            + ordinal + ","
+            + int(source) + ","
+            + tmxId + ","
+            + int(type)
+        + ")";
+    }
 }
