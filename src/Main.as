@@ -102,6 +102,17 @@ void RenderWindow() {
             map.Download();
         }
 
+        UI::SameLine();
+        if (map.favorite) {
+            if (UI::Button(Icons::Heart)) {
+                map.RemoveFromFavorites();
+            }
+        } else {
+            if (UI::Button(Icons::HeartO)) {
+                map.AddToFavorites();
+            }
+        }
+
         if (map.lastPlayed > 0) {
             UI::SameLine();
             UI::AlignTextToFramePadding();

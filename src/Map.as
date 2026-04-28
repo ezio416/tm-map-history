@@ -78,6 +78,39 @@ class Map {
         uid = string(json["uid"]);
     }
 
+    void AddToFavorites() {
+        startnew(CoroutineFunc(AddToFavoritesAsync));
+    }
+
+    void AddToFavoritesAsync() {
+        trace("adding favorite " + StrWrap(uid));
+
+        const string audience = "NadeoLiveServices";
+        NadeoServices::AddAudience(audience);
+        while (!NadeoServices::IsAuthenticated(audience)) {
+            yield();
+        }
+
+        sleep(500);
+        Net::HttpRequest@ req = NadeoServices::Post(
+            audience,
+            NadeoServices::BaseURLLive() + "/api/token/map/favorite/" + uid + "/add"
+        );
+        req.Start();
+        while (!req.Finished()) {
+            yield();
+        }
+
+        const int code = req.ResponseCode();
+        if (code != 204) {
+            error("bad response adding favorite " + StrWrap(uid) + " (" + code + "): " + req.String());
+            return;
+        }
+
+        trace("added favorite " + StrWrap(uid));
+        favorite = true;
+    }
+
     void Download() {
         startnew(CoroutineFunc(DownloadAsync));
     }
@@ -327,6 +360,39 @@ class Map {
         sleep(5000);
 
         loadingMap = false;
+    }
+
+    void RemoveFromFavorites() {
+        startnew(CoroutineFunc(RemoveFromFavoritesAsync));
+    }
+
+    void RemoveFromFavoritesAsync() {
+        trace("removing favorite " + StrWrap(uid));
+
+        const string audience = "NadeoLiveServices";
+        NadeoServices::AddAudience(audience);
+        while (!NadeoServices::IsAuthenticated(audience)) {
+            yield();
+        }
+
+        sleep(500);
+        Net::HttpRequest@ req = NadeoServices::Post(
+            audience,
+            NadeoServices::BaseURLLive() + "/api/token/map/favorite/" + uid + "/remove"
+        );
+        req.Start();
+        while (!req.Finished()) {
+            yield();
+        }
+
+        const int code = req.ResponseCode();
+        if (code != 204) {
+            error("bad response removing favorite " + StrWrap(uid) + " (" + code + "): " + req.String());
+            return;
+        }
+
+        trace("removed favorite " + StrWrap(uid));
+        favorite = false;
     }
 
     private void ReturnToMenu() {
