@@ -353,7 +353,7 @@ class Map {
         auto App = cast<CTrackMania>(GetApp());
         App.ManiaTitleControlScriptAPI.PlayMap(
             downloadUrl,
-            "TrackMania/TM_PlayMap_Local",
+            "TrackMania/TM_PlayMap_Local",  // TODO check map type
             ""
         );
 
