@@ -121,6 +121,11 @@ void RenderWindow() {
             }
         }
 
+        UI::SameLine();
+        if (UI::Button(Icons::TrashO)) {
+            Database::Remove(map.uid);
+        }
+
         if (map.lastPlayed > 0) {
             UI::SameLine();
             UI::AlignTextToFramePadding();

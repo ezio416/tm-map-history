@@ -108,6 +108,8 @@ namespace Database {
     void Clear() {
         try {
             Lock().Execute("DELETE FROM " + TABLE);
+            maps = {};
+            mapsByUid.DeleteAll();
         } catch {
             error("Database::Clear(): " + getExceptionInfo());
         }
@@ -263,8 +265,20 @@ namespace Database {
             return;
         }
 
+        trace("removing " + StrWrap(uid));
+
         try {
             Lock().Execute("DELETE FROM " + TABLE + " WHERE mapUid = " + StrWrap(uid));
+            Map@ map;
+            mapsByUid.Get(uid, @map);
+            if (map !is null) {
+                mapsByUid.Delete(uid);
+                const int index = maps.FindByRef(map);
+                if (index > -1) {
+                    maps.RemoveAt(index);
+                }
+            }
+
         } catch {
             error("Database::Remove(" + StrWrap(uid) + "): " + getExceptionInfo());
         }
