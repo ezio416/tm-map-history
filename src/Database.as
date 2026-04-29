@@ -257,14 +257,6 @@ namespace Database {
     }
 
     void Remove(const string&in uid) {
-        if (false
-            or uid.Length == 0
-            or uid.Length > 27
-        ) {
-            warn("invalid uid to remove: " + uid);
-            return;
-        }
-
         trace("removing " + StrWrap(uid));
 
         try {
