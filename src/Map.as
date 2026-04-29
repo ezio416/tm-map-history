@@ -58,6 +58,10 @@ class Map {
         LoadThumbnail();
     }
 
+    string get_uidWrapped() {
+        return StrWrap(uid);
+    }
+
     Map(const string&in uid) {
         this.uid = uid;
     }
@@ -97,7 +101,7 @@ class Map {
     }
 
     void AddToFavoritesAsync() {
-        trace("adding favorite " + StrWrap(uid));
+        trace("adding favorite " + uidWrapped);
 
         const string audience = "NadeoLiveServices";
         NadeoServices::AddAudience(audience);
@@ -117,11 +121,11 @@ class Map {
 
         const int code = req.ResponseCode();
         if (code != 204) {
-            error("bad response adding favorite " + StrWrap(uid) + " (" + code + "): " + req.String());
+            error("bad response adding favorite " + uidWrapped + " (" + code + "): " + req.String());
             return;
         }
 
-        trace("added favorite " + StrWrap(uid));
+        trace("added favorite " + uidWrapped);
         favorite = true;
     }
 
@@ -134,7 +138,7 @@ class Map {
             GetInfoAsync();
 
             if (id.Length == 0) {
-                warn("can't download " + StrWrap(uid));
+                warn("can't download " + uidWrapped);
                 return;
             }
         }
@@ -145,7 +149,7 @@ class Map {
 
         downloadingMap = true;
 
-        trace("downloading map file for " + StrWrap(uid));
+        trace("downloading map file for " + uidWrapped);
 
         Net::HttpRequest@ req = Net::HttpGet(downloadUrl);
         while (!req.Finished()) {
@@ -159,7 +163,7 @@ class Map {
         try {
             req.SaveToFile(newPath);
         } catch {
-            error("failed saving " + StrWrap(uid) + ": " + getExceptionInfo());
+            error("failed saving " + uidWrapped + ": " + getExceptionInfo());
         }
 
         downloadingMap = false;
@@ -179,7 +183,7 @@ class Map {
             GetInfoAsync();
 
             if (id.Length == 0) {
-                warn("can't load " + StrWrap(uid));
+                warn("can't load " + uidWrapped);
                 return;
             }
         }
@@ -190,7 +194,7 @@ class Map {
 
         loadingMap = true;
 
-        trace("loading map " + StrWrap(uid) + " for editing");
+        trace("loading map " + uidWrapped + " for editing");
 
         ReturnToMenu();
 
@@ -231,7 +235,7 @@ class Map {
 
         gettingMapInfo = true;
 
-        trace("getting info for " + StrWrap(uid));
+        trace("getting info for " + uidWrapped);
 
         const string audience = "NadeoServices";
         NadeoServices::AddAudience(audience);
@@ -251,7 +255,7 @@ class Map {
 
         const int code = req.ResponseCode();
         if (code != 200) {
-            error("bad response for " + StrWrap(uid) + " (" + code + "): " + req.String());
+            error("bad response for " + uidWrapped + " (" + code + "): " + req.String());
             gettingMapInfo = false;
             return;
         }
@@ -279,10 +283,10 @@ class Map {
                 type = MapType::Stunt;
             }
 
-            trace("got info for " + StrWrap(uid));
+            trace("got info for " + uidWrapped);
 
         } catch {
-            error("bad json for " + StrWrap(uid) + ": " + req.String());
+            error("bad json for " + uidWrapped + ": " + req.String());
         }
 
         GetTmxIdAsync();
@@ -297,7 +301,7 @@ class Map {
 
         gettingThumbnail = true;
 
-        trace("getting thumbnail for " + StrWrap(uid));
+        trace("getting thumbnail for " + uidWrapped);
 
         Net::HttpRequest@ req = Net::HttpGet(thumbnailUrl);
         while (!req.Finished()) {
@@ -307,7 +311,7 @@ class Map {
         if (req.ResponseCode() == 200) {
             req.SaveToFile(thumbnailPath);
         } else {
-            error("getting thumbnail failed: " + StrWrap(uid));
+            error("getting thumbnail failed: " + uidWrapped);
             sleep(60000);
         }
 
@@ -317,7 +321,7 @@ class Map {
     }
 
     private void GetTmxIdAsync() {
-        trace("getting TMX info for " + StrWrap(uid));
+        trace("getting TMX info for " + uidWrapped);
 
         const uint64 start = Time::Now;
 
@@ -329,7 +333,7 @@ class Map {
             yield();
 
             if (Time::Now - start > 5000) {
-                warn("timed out getting TMX info for " + StrWrap(uid));
+                warn("timed out getting TMX info for " + uidWrapped);
                 req.Cancel();
                 return;
             }
@@ -337,15 +341,15 @@ class Map {
 
         const int code = req.ResponseCode();
         if (code != 200) {
-            error("bad response (TMX) for " + StrWrap(uid) + " (" + code + "): " + req.String());
+            error("bad response (TMX) for " + uidWrapped + " (" + code + "): " + req.String());
             return;
         }
 
         try {
             tmxId = int(req.Json()["Results"][0]["MapId"]);
-            trace("got TMX info for " + StrWrap(uid));
+            trace("got TMX info for " + uidWrapped);
         } catch {
-            error("bad json (TMX) for " + StrWrap(uid) + ": " + req.String());
+            error("bad json (TMX) for " + uidWrapped + ": " + req.String());
         }
     }
 
@@ -359,11 +363,11 @@ class Map {
                 IO::File file(thumbnailPath, IO::FileMode::Read);
                 @_thumbnail = UI::LoadTexture(file.Read(file.Size()));
             } catch {
-                error("loading thumbnail for " + StrWrap(uid) + " failed: " + getExceptionInfo());
+                error("loading thumbnail for " + uidWrapped + " failed: " + getExceptionInfo());
                 try {
                     IO::Delete(thumbnailPath);
                 } catch {
-                    error("deleting thumbnail for " + StrWrap(uid) + " failed:" + getExceptionInfo());
+                    error("deleting thumbnail for " + uidWrapped + " failed:" + getExceptionInfo());
                 }
             }
         } else {
@@ -372,13 +376,13 @@ class Map {
     }
 
     void OpenTmio() {
-        trace("opening Trackmania.io page for " + StrWrap(uid));
+        trace("opening Trackmania.io page for " + uidWrapped);
         OpenBrowserURL("https://trackmania.io/#/leaderboard/" + uid);
     }
 
     void OpenTmx() {
         if (tmxId > -1) {
-            trace("opening Trackmania.exchange page for " + StrWrap(uid));
+            trace("opening Trackmania.exchange page for " + uidWrapped);
             OpenBrowserURL("https://trackmania.exchange/mapshow/" + tmxId);
         }
     }
@@ -397,7 +401,7 @@ class Map {
             GetInfoAsync();
 
             if (id.Length == 0) {
-                warn("can't load " + StrWrap(uid));
+                warn("can't load " + uidWrapped);
                 return;
             }
         }
@@ -408,7 +412,7 @@ class Map {
 
         loadingMap = true;
 
-        trace("loading map " + StrWrap(uid) + " for playing");
+        trace("loading map " + uidWrapped + " for playing");
 
         ReturnToMenu();
 
@@ -437,7 +441,7 @@ class Map {
     }
 
     void RemoveFromFavoritesAsync() {
-        trace("removing favorite " + StrWrap(uid));
+        trace("removing favorite " + uidWrapped);
 
         const string audience = "NadeoLiveServices";
         NadeoServices::AddAudience(audience);
@@ -457,11 +461,11 @@ class Map {
 
         const int code = req.ResponseCode();
         if (code != 204) {
-            error("bad response removing favorite " + StrWrap(uid) + " (" + code + "): " + req.String());
+            error("bad response removing favorite " + uidWrapped + " (" + code + "): " + req.String());
             return;
         }
 
-        trace("removed favorite " + StrWrap(uid));
+        trace("removed favorite " + uidWrapped);
         favorite = false;
     }
 
@@ -486,7 +490,7 @@ class Map {
             + StrWrap(authorId) + ","
             + lastPlayed + ","
             + StrWrap(id) + ","
-            + StrWrap(uid) + ","
+            + uidWrapped + ","
             + StrWrap(nameRaw.Replace("'", "''")) + ","
             + ordinal + ","
             + int(source) + ","
@@ -617,7 +621,7 @@ void GetInfosAsync(dictionary@ needsInfo) {
                 Map@ map;
                 needsInfo.Get(UID, @map);
                 if (map is null) {
-                    warn("map doesn't exist: " + StrWrap(UID));
+                    warn("map doesn't exist: " + uidWrapped);
                     continue;
                 }
 

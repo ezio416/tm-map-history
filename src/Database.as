@@ -73,10 +73,10 @@ namespace Database {
 
         try {
             db.Execute("REPLACE INTO " + TABLE + " " + COLUMN_NAMES + " VALUES " + map.ToQuery());
-            trace("added map " + StrWrap(map.uid));
+            trace("added map " + map.uidWrapped);
 
         } catch {
-            error("Database::Add(): uid " + StrWrap(map.uid) + " failed: " + getExceptionInfo());
+            error("Database::Add(): uid " + map.uidWrapped + " failed: " + getExceptionInfo());
         }
     }
 
