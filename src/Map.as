@@ -347,8 +347,17 @@ class Map {
         }
 
         if (IO::FileExists(thumbnailPath)) {
-            IO::File file(thumbnailPath, IO::FileMode::Read);
-            @thumbnail = UI::LoadTexture(file.Read(file.Size()));
+            try {
+                IO::File file(thumbnailPath, IO::FileMode::Read);
+                @thumbnail = UI::LoadTexture(file.Read(file.Size()));
+            } catch {
+                error("loading thumbnail for " + StrWrap(uid) + " failed: " + getExceptionInfo());
+                try {
+                    IO::Delete(thumbnailPath);
+                } catch {
+                    error("deleting thumbnail for " + StrWrap(uid) + " failed:" + getExceptionInfo());
+                }
+            }
         } else {
             startnew(CoroutineFunc(GetThumbnailAsync));
         }
