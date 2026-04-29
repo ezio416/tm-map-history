@@ -579,13 +579,13 @@ void GetInfosAsync(dictionary@ needsInfo) {
     }
 
     string[] uids = needsInfo.GetKeys();
-    const uint MAX_UIDS = 290;
+    const uint max_uids = 290;
     uint successful = 0;
 
     while (!uids.IsEmpty()) {
         string[] group;
-        const uint GROUP_SIZE = Math::Min(uids.Length, MAX_UIDS);
-        for (uint i = 0; i < GROUP_SIZE; i++) {
+        const uint group_size = Math::Min(uids.Length, max_uids);
+        for (uint i = 0; i < group_size; i++) {
             group.InsertLast(uids[0]);
             uids.RemoveAt(0);
         }
@@ -617,11 +617,11 @@ void GetInfosAsync(dictionary@ needsInfo) {
             trace("request returned info for " + json.Length + " maps");
 
             for (uint i = 0; i < json.Length; i++) {
-                const string UID = string(json[i]["mapUid"]);
+                const string uid = string(json[i]["mapUid"]);
                 Map@ map;
-                needsInfo.Get(UID, @map);
+                needsInfo.Get(uid, @map);
                 if (map is null) {
-                    warn("map doesn't exist: " + StrWrap(UID));
+                    warn("map doesn't exist: " + StrWrap(uid));
                     continue;
                 }
 
@@ -629,17 +629,17 @@ void GetInfosAsync(dictionary@ needsInfo) {
                 map.id = string(json[i]["mapId"]);
                 map.nameRaw = string(json[i]["name"]);
 
-                const string TYPE = string(json[i]["mapType"]);
-                if (TYPE.EndsWith("TM_Race")) {
+                const string type = string(json[i]["mapType"]);
+                if (type.EndsWith("TM_Race")) {
                     map.type = bool(json[i]["hasClones"])
                         ? MapType::RaceClones
                         : MapType::Race
                     ;
-                } else if (TYPE.EndsWith("TM_Platform")) {
+                } else if (type.EndsWith("TM_Platform")) {
                     map.type = MapType::Platform;
-                } else if (TYPE.EndsWith("TM_Royal")) {
+                } else if (type.EndsWith("TM_Royal")) {
                     map.type = MapType::Royal;
-                } else if (TYPE.EndsWith("TM_Stunt")) {
+                } else if (type.EndsWith("TM_Stunt")) {
                     map.type = MapType::Stunt;
                 }
 
