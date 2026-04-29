@@ -621,7 +621,7 @@ void GetInfosAsync(dictionary@ needsInfo) {
                 Map@ map;
                 needsInfo.Get(UID, @map);
                 if (map is null) {
-                    warn("map doesn't exist: " + uidWrapped);
+                    warn("map doesn't exist: " + StrWrap(UID));
                     continue;
                 }
 
