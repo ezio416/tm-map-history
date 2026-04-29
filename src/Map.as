@@ -33,7 +33,6 @@ class Map {
     string       nameStripped;
     int          ordinal     = -1;  // legacy from json
     MapSource    source      = MapSource::Unknown;
-    UI::Texture@ thumbnail;
     int          tmxId       = -1;
     MapType      type        = MapType::Unknown;
     string       uid;
@@ -48,6 +47,15 @@ class Map {
 
     string get_thumbnailUrl() {
         return "https://core.trackmania.nadeo.live/maps/" + id + "/thumbnail.jpg";
+    }
+
+    private UI::Texture@ _thumbnail;
+    UI::Texture@ get_thumbnail() {
+        if (_thumbnail !is null) {
+            return _thumbnail;
+        }
+
+        LoadThumbnail();
     }
 
     Map(const string&in uid) {
@@ -342,14 +350,14 @@ class Map {
     }
 
     void LoadThumbnail() {
-        if (thumbnail !is null) {
+        if (_thumbnail !is null) {
             return;
         }
 
         if (IO::FileExists(thumbnailPath)) {
             try {
                 IO::File file(thumbnailPath, IO::FileMode::Read);
-                @thumbnail = UI::LoadTexture(file.Read(file.Size()));
+                @_thumbnail = UI::LoadTexture(file.Read(file.Size()));
             } catch {
                 error("loading thumbnail for " + StrWrap(uid) + " failed: " + getExceptionInfo());
                 try {
