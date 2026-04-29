@@ -1,8 +1,9 @@
 const string DOWNLOADED_FOLDER = IO::FromUserGameFolder("Maps/Downloaded").Replace("\\", "/");
 
-bool       downloadingMap = false;
-bool       gettingMapInfo = false;
-bool       loadingMap     = false;
+bool       downloadingMap   = false;
+bool       gettingMapInfo   = false;
+bool       gettingThumbnail = false;
+bool       loadingMap       = false;
 Map@[]     maps;
 dictionary mapsByUid;
 
@@ -23,21 +24,26 @@ enum MapType {
 }
 
 class Map {
-    string    authorId;
-    bool      favorite    = false;
-    string    id;
-    int64     lastPlayed  = 0;
-    string    nameColored;
-    string    nameRaw;
-    string    nameStripped;
-    int       ordinal     = -1;  // legacy from json
-    MapSource source      = MapSource::Unknown;
-    int       tmxId       = -1;
-    MapType   type        = MapType::Unknown;
-    string    uid;
+    string       authorId;
+    bool         favorite    = false;
+    string       id;
+    int64        lastPlayed  = 0;
+    string       nameColored;
+    string       nameRaw;
+    string       nameStripped;
+    int          ordinal     = -1;  // legacy from json
+    MapSource    source      = MapSource::Unknown;
+    UI::Texture@ thumbnail;
+    int          tmxId       = -1;
+    MapType      type        = MapType::Unknown;
+    string       uid;
 
     string get_downloadUrl() {
         return "https://core.trackmania.nadeo.live/maps/" + id + "/file";
+    }
+
+    string get_thumbnailPath() {
+        return IO::FromStorageFolder(uid + ".jpg");
     }
 
     string get_thumbnailUrl() {
@@ -276,6 +282,32 @@ class Map {
         gettingMapInfo = false;
     }
 
+    void GetThumbnailAsync() {
+        if (gettingThumbnail) {
+            return;
+        }
+
+        gettingThumbnail = true;
+
+        trace("getting thumbnail for " + StrWrap(uid));
+
+        Net::HttpRequest@ req = Net::HttpGet(thumbnailUrl);
+        while (!req.Finished()) {
+            yield();
+        }
+
+        if (req.ResponseCode() == 200) {
+            req.SaveToFile(thumbnailPath);
+        } else {
+            error("getting thumbnail failed: " + StrWrap(uid));
+            sleep(60000);
+        }
+
+        yield();
+
+        gettingThumbnail = false;
+    }
+
     private void GetTmxIdAsync() {
         trace("getting TMX info for " + StrWrap(uid));
 
@@ -306,6 +338,19 @@ class Map {
             trace("got TMX info for " + StrWrap(uid));
         } catch {
             error("bad json (TMX) for " + StrWrap(uid) + ": " + req.String());
+        }
+    }
+
+    void LoadThumbnail() {
+        if (thumbnail !is null) {
+            return;
+        }
+
+        if (IO::FileExists(thumbnailPath)) {
+            IO::File file(thumbnailPath, IO::FileMode::Read);
+            @thumbnail = UI::LoadTexture(file.Read(file.Size()));
+        } else {
+            startnew(CoroutineFunc(GetThumbnailAsync));
         }
     }
 
