@@ -1,7 +1,8 @@
-const string  pluginColor = "\\$0AF";
-const string  pluginIcon  = Icons::ClockO;
-Meta::Plugin@ pluginMeta  = Meta::ExecutingPlugin();
-const string  pluginTitle = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name;
+const string  pluginColor   = "\\$0AF";
+const string  pluginIcon    = Icons::ClockO;
+Meta::Plugin@ pluginMeta    = Meta::ExecutingPlugin();
+const string  pluginTitle   = pluginColor + pluginIcon + "\\$G " + pluginMeta.Name;
+const vec4    rowBgAltColor = vec4(vec3(), 0.5f);
 
 void Main() {
     Database::MigrateFromJsonAsync();
@@ -75,63 +76,5 @@ void RenderMenu() {
 }
 
 void RenderWindow() {
-    for (uint i = 0; i < maps.Length; i++) {
-        Map@ map = maps[i];
-        UI::PushID(map.uid);
-
-        UI::AlignTextToFramePadding();
-        UI::Text(map.uid + (map.id.Length > 0 ? " (" + map.id + ")" : ""));
-
-        UI::SameLine();
-        UI::Text(tostring(map.type));
-
-        UI::SameLine();
-        if (UI::Button(Icons::Play)) {
-            map.Play();
-        }
-
-        UI::SameLine();
-        if (UI::Button(Icons::Pencil)) {
-            map.Edit();
-        }
-
-        UI::SameLine();
-        if (UI::Button(Icons::Heartbeat)) {
-            map.OpenTmio();
-        }
-
-        UI::SameLine();
-        if (UI::Button(Icons::Exchange)) {
-            map.OpenTmx();
-        }
-
-        UI::SameLine();
-        if (UI::Button(Icons::Download)) {
-            map.Download();
-        }
-
-        UI::SameLine();
-        if (map.favorite) {
-            if (UI::Button(Icons::Heart)) {
-                map.RemoveFromFavorites();
-            }
-        } else {
-            if (UI::Button(Icons::HeartO)) {
-                map.AddToFavorites();
-            }
-        }
-
-        UI::SameLine();
-        if (UI::Button(Icons::TrashO)) {
-            Database::Remove(map.uid);
-        }
-
-        if (map.lastPlayed > 0) {
-            UI::SameLine();
-            UI::AlignTextToFramePadding();
-            UI::Text(Time::FormatString("    %F %T", map.lastPlayed));
-        }
-
-        UI::PopID();
-    }
+    ;
 }

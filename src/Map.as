@@ -56,6 +56,7 @@ class Map {
         }
 
         LoadThumbnail();
+        return null;
     }
 
     string get_uidWrapped() {

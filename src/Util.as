@@ -1,3 +1,7 @@
+string ColoredBool(const string&in text, const bool value) {
+    return (value ? "\\$0F0" : "\\$F00") + text;
+}
+
 bool InMap() {
     auto App = cast<CTrackMania>(GetApp());
 
