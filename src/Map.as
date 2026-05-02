@@ -292,6 +292,8 @@ class Map {
 
         GetTmxIdAsync();
 
+        Database::Add(this);
+
         gettingMapInfo = false;
     }
 
