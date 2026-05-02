@@ -29,7 +29,8 @@ namespace Database {
     [Setting hidden]
     bool S_Migrated = false;
 
-    bool locked = false;
+    bool loadingReplays = false;
+    bool locked         = false;
 
     class Lock {
         private SQLite::Database@ _db;
@@ -143,6 +144,14 @@ namespace Database {
     }
 
     void LoadFromReplaysAsync() {
+        if (loadingReplays) {
+            return;
+        }
+
+        loadingReplays = true;
+
+        trace("loading maps from replays");
+
         auto App = cast<CTrackMania>(GetApp());
 
         int64 tzOffset = 0;
@@ -151,12 +160,14 @@ namespace Database {
             int64 hours = 0;
             if (!Text::TryParseInt64(offsetParts[0], hours)) {
                 error("failed parsing timezone offset hours: " + offsetParts[0]);
+                loadingReplays = false;
                 return;
             }
 
             int64 minutes = 0;
             if (!Text::TryParseInt64(offsetParts[1], minutes)) {
                 error("failed parsing timezone offset minutes: " + offsetParts[0]);
+                loadingReplays = false;
                 return;
             }
 
@@ -166,8 +177,10 @@ namespace Database {
             }
         }
 
-        Map@[] needsInfo;
-        dictionary needsInfoByUid;
+        uint         found = 0;
+        const string login = App.LocalPlayerInfo.Login;
+        Map@[]       needsInfo;
+        dictionary   needsInfoByUid;
 
         for (uint i = 0; i < App.ReplayRecordInfos.Length; i++) {
             CGameCtnReplayRecordInfo@ Replay = App.ReplayRecordInfos[i];
@@ -175,9 +188,12 @@ namespace Database {
                 or Replay is null
                 or Replay.Fid is null
                 or Replay.MapUid.Length == 0
+                or Replay.PlayerLogin != login
             ) {
                 continue;
             }
+
+            found++;
 
             Map@ map;
             mapsByUid.Get(Replay.MapUid, @map);
@@ -196,9 +212,13 @@ namespace Database {
             needsInfoByUid.Set(map.uid, @map);
         }
 
+        trace("found " + found + " valid replays");
+
         GetInfosAsync(needsInfoByUid);
         AddMany(needsInfo);
         Load();
+
+        loadingReplays = false;
     }
 
     void MigrateFromJsonAsync() {
