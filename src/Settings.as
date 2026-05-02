@@ -11,15 +11,25 @@ bool S_HideWithOP = false;
 void SettingsTab_Debug() {
     const float scale = UI::GetScale();
 
-    UI::Text(ColoredBool("downloadingMap",   downloadingMap));
+    UI::Text(ColoredBool("downloadingMap",           downloadingMap));
     UI::SameLine();
-    UI::Text(ColoredBool("gettingMapInfo",   gettingMapInfo));
+    UI::Text(ColoredBool("gettingMapInfo",           gettingMapInfo));
     UI::SameLine();
-    UI::Text(ColoredBool("gettingThumbnail", gettingThumbnail));
+    UI::Text(ColoredBool("gettingThumbnail",         gettingThumbnail));
     UI::SameLine();
-    UI::Text(ColoredBool("loadingMap",       loadingMap));
+    UI::Text(ColoredBool("loadingMap",               loadingMap));
     UI::SameLine();
-    UI::Text(ColoredBool("Database::locked", Database::locked));
+    UI::Text(ColoredBool("Database::loadingReplays", Database::loadingReplays));
+    UI::SameLine();
+    UI::Text(ColoredBool("Database::locked",         Database::locked));
+
+    UI::Separator();
+
+    UI::BeginDisabled(Database::loadingReplays);
+    if (UI::Button(Icons::Download + " load from replays")) {
+        startnew(Database::LoadFromReplaysAsync);
+    }
+    UI::EndDisabled();
 
     UI::Separator();
 
