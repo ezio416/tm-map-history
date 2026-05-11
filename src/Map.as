@@ -290,9 +290,9 @@ class Map {
             error("bad json for " + uidWrapped + ": " + req.String());
         }
 
-        GetTmxIdAsync();
-
-        Database::Add(this);
+        if (GetTmxIdAsync()) {
+            Database::Add(this);
+        }
 
         gettingMapInfo = false;
     }
@@ -323,7 +323,7 @@ class Map {
         gettingThumbnail = false;
     }
 
-    private void GetTmxIdAsync() {
+    private bool GetTmxIdAsync() {
         trace("getting TMX info for " + uidWrapped);
 
         const uint64 start = Time::Now;
@@ -338,21 +338,23 @@ class Map {
             if (Time::Now - start > 5000) {
                 warn("timed out getting TMX info for " + uidWrapped);
                 req.Cancel();
-                return;
+                return false;
             }
         }
 
         const int code = req.ResponseCode();
         if (code != 200) {
             error("bad response (TMX) for " + uidWrapped + " (" + code + "): " + req.String());
-            return;
+            return false;
         }
 
         try {
             tmxId = int(req.Json()["Results"][0]["MapId"]);
             trace("got TMX info for " + uidWrapped);
+            return true;
         } catch {
             error("bad json (TMX) for " + uidWrapped + ": " + req.String());
+            return false;
         }
     }
 
